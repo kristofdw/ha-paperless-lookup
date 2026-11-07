@@ -78,6 +78,11 @@ warn_unreachable = true
 enable_error_code = ["ignore-without-code", "redundant-self", "truthy-iterable"]
 
 [[tool.mypy.overrides]]
+# Home Assistant re-exports names with plain imports (e.g. websocket_api.websocket_command).
+module = ["homeassistant.*"]
+implicit_reexport = true
+
+[[tool.mypy.overrides]]
 # The plugin ships without py.typed; its code is typed well enough to use.
 module = ["pytest_homeassistant_custom_component.*"]
 follow_untyped_imports = true

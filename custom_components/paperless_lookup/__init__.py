@@ -6,7 +6,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 
 from .api import (
     PaperlessAuthError,
@@ -20,8 +21,11 @@ from .const import CONF_PAPERLESS_USER_ID, DOMAIN
 from .coordinator import PaperlessLookupCoordinator
 from .helpers import create_client, missing_permissions
 from .store import LinkStore
+from .views import PaperlessDocumentView
+from .websocket_api import async_register as async_register_websocket_api
 
 PLATFORMS: list[Platform] = []
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 @dataclass(slots=True)
@@ -35,6 +39,13 @@ class PaperlessLookupData:
 
 
 type PaperlessLookupConfigEntry = ConfigEntry[PaperlessLookupData]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Register the websocket API and the document view (once)."""
+    async_register_websocket_api(hass)
+    hass.http.register_view(PaperlessDocumentView(hass))
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PaperlessLookupConfigEntry) -> bool:

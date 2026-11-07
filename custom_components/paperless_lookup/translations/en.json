@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Connect to Paperless-ngx",
-        "description": "Use a dedicated Paperless user with view permissions only.",
+        "description": "Use a dedicated Paperless user with view permissions only. Paperless-ngx 3.0 or newer is required.",
         "data": {
           "url": "URL",
           "api_token": "API token",
@@ -14,10 +14,136 @@
           "api_token": "API token of the Paperless user that Home Assistant uses",
           "verify_ssl": "Check the TLS certificate of the server (recommended)"
         }
+      },
+      "reauth_confirm": {
+        "title": "Paperless API token rejected",
+        "description": "Paperless no longer accepts the API token. Enter a new token of the same Paperless user.",
+        "data": {
+          "api_token": "API token"
+        },
+        "data_description": {
+          "api_token": "API token of the Paperless user that Home Assistant uses"
+        }
+      },
+      "reconfigure": {
+        "title": "Change the Paperless connection",
+        "description": "The token must belong to the same Paperless user as before. Enter the token again.",
+        "data": {
+          "url": "URL",
+          "api_token": "API token",
+          "verify_ssl": "Verify SSL certificate"
+        },
+        "data_description": {
+          "url": "Address of your Paperless-ngx server, for example http://192.168.1.10:8000",
+          "api_token": "API token of the Paperless user that Home Assistant uses",
+          "verify_ssl": "Check the TLS certificate of the server (recommended)"
+        }
+      },
+      "insecure_http": {
+        "title": "Unencrypted connection",
+        "description": "The address starts with http://, so the API token and your documents travel unencrypted over the network. This is only acceptable on a trusted local network. Use https:// when Paperless is reachable through a reverse proxy.\n\nSubmit to continue anyway."
+      },
+      "permissions_warning": {
+        "title": "Paperless user can do more than read",
+        "description": "The Paperless user {username} is a superuser or may add, change or delete data. Home Assistant only reads from Paperless, so a dedicated user with view permissions only is safer.\n\nSubmit to continue anyway."
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to Paperless.",
+      "invalid_auth": "The API token was rejected.",
+      "invalid_url": "Enter an http:// or https:// address.",
+      "not_paperless": "No Paperless-ngx API found at this address.",
+      "unsupported_version": "This Paperless version is not supported. Paperless-ngx 3.0 or newer is required.",
+      "missing_permission": "The Paperless user lacks these permissions: {permissions}.",
+      "unknown": "Unexpected error."
+    },
+    "abort": {
+      "already_configured": "This Paperless user on this server is already configured.",
+      "single_instance_allowed": "Already configured. Only a single configuration possible.",
+      "reauth_successful": "Re-authentication was successful.",
+      "reconfigure_successful": "Re-configuration was successful.",
+      "wrong_account": "The token belongs to another Paperless user. Remove the integration and add it again to switch users.",
+      "unknown": "Unexpected error."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Paperless Lookup options",
+        "menu_options": {
+          "access": "Access tag",
+          "categories": "Categories and users",
+          "devices": "Devices",
+          "general": "Refresh interval"
+        }
+      },
+      "access": {
+        "title": "Access tag",
+        "description": "Only Paperless documents with this tag are visible in Home Assistant.",
+        "data": {
+          "access_tag": "Access tag",
+          "admins_always": "Administrators see all categories"
+        },
+        "data_description": {
+          "access_tag": "Without an access tag, no document is visible.",
+          "admins_always": "Home Assistant administrators get access to every category."
+        }
+      },
+      "categories": {
+        "title": "Categories",
+        "description": "A category is a Paperless document type. Documents of other types, or without a type, are not visible.",
+        "data": {
+          "categories": "Categories"
+        }
+      },
+      "category_users": {
+        "title": "Users per category",
+        "description": "Choose, per category, the Home Assistant users that may see its documents."
+      },
+      "devices": {
+        "title": "Devices",
+        "description": "Documents of a device category (for example manuals) are linked to devices through a custom field with one or more models, separated by ;.",
+        "data": {
+          "device_categories": "Device categories",
+          "model_field": "Model field",
+          "zigbee2mqtt_fallback": "Zigbee2MQTT link as fallback"
+        },
+        "data_description": {
+          "device_categories": "Only categories chosen under Categories are listed.",
+          "model_field": "Paperless custom field (text) with the device models.",
+          "zigbee2mqtt_fallback": "Link to the Zigbee2MQTT device page when a Zigbee device has no manual."
+        }
+      },
+      "general": {
+        "title": "Refresh interval",
+        "data": {
+          "refresh_interval": "Refresh interval"
+        },
+        "data_description": {
+          "refresh_interval": "How often the list of documents is reloaded from Paperless."
+        }
       }
     },
     "abort": {
-      "single_instance_allowed": "Already configured. Only a single configuration possible."
+      "not_loaded": "The integration is not loaded. Check the connection to Paperless first.",
+      "cannot_connect": "Failed to connect to Paperless."
+    }
+  },
+  "exceptions": {
+    "invalid_auth": {
+      "message": "Paperless rejected the API token."
+    },
+    "wrong_account": {
+      "message": "The API token belongs to another Paperless user."
+    },
+    "unsupported_version": {
+      "message": "This Paperless version is not supported. Paperless-ngx 3.0 or newer is required."
+    },
+    "missing_permission": {
+      "message": "The Paperless user lacks these permissions: {permissions}."
+    },
+    "cannot_connect": {
+      "message": "Failed to connect to Paperless."
     }
   }
 }

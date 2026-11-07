@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Verbinden met Paperless-ngx",
-        "description": "Gebruik een aparte Paperless-gebruiker met alleen leesrechten.",
+        "description": "Gebruik een aparte Paperless-gebruiker met alleen leesrechten. Paperless-ngx 3.0 of nieuwer is vereist.",
         "data": {
           "url": "URL",
           "api_token": "API-token",
@@ -14,10 +14,136 @@
           "api_token": "API-token van de Paperless-gebruiker die Home Assistant gebruikt",
           "verify_ssl": "Het TLS-certificaat van de server controleren (aanbevolen)"
         }
+      },
+      "reauth_confirm": {
+        "title": "Paperless-API-token geweigerd",
+        "description": "Paperless aanvaardt de API-token niet meer. Vul een nieuwe token in van dezelfde Paperless-gebruiker.",
+        "data": {
+          "api_token": "API-token"
+        },
+        "data_description": {
+          "api_token": "API-token van de Paperless-gebruiker die Home Assistant gebruikt"
+        }
+      },
+      "reconfigure": {
+        "title": "Paperless-verbinding wijzigen",
+        "description": "De token moet bij dezelfde Paperless-gebruiker horen als voorheen. Vul de token opnieuw in.",
+        "data": {
+          "url": "URL",
+          "api_token": "API-token",
+          "verify_ssl": "SSL-certificaat controleren"
+        },
+        "data_description": {
+          "url": "Adres van je Paperless-ngx-server, bijvoorbeeld http://192.168.1.10:8000",
+          "api_token": "API-token van de Paperless-gebruiker die Home Assistant gebruikt",
+          "verify_ssl": "Het TLS-certificaat van de server controleren (aanbevolen)"
+        }
+      },
+      "insecure_http": {
+        "title": "Onversleutelde verbinding",
+        "description": "Het adres begint met http://, dus de API-token en je documenten gaan onversleuteld over het netwerk. Dat kan alleen op een vertrouwd lokaal netwerk. Gebruik https:// als Paperless via een reverse proxy bereikbaar is.\n\nBevestig om toch verder te gaan."
+      },
+      "permissions_warning": {
+        "title": "Paperless-gebruiker mag meer dan lezen",
+        "description": "De Paperless-gebruiker {username} is superuser of mag gegevens toevoegen, wijzigen of verwijderen. Home Assistant leest alleen uit Paperless, dus een aparte gebruiker met alleen leesrechten is veiliger.\n\nBevestig om toch verder te gaan."
+      }
+    },
+    "error": {
+      "cannot_connect": "Kan geen verbinding maken met Paperless.",
+      "invalid_auth": "De API-token werd geweigerd.",
+      "invalid_url": "Vul een adres in dat begint met http:// of https://.",
+      "not_paperless": "Geen Paperless-ngx-API gevonden op dit adres.",
+      "unsupported_version": "Deze Paperless-versie wordt niet ondersteund. Paperless-ngx 3.0 of nieuwer is vereist.",
+      "missing_permission": "De Paperless-gebruiker mist deze rechten: {permissions}.",
+      "unknown": "Onverwachte fout."
+    },
+    "abort": {
+      "already_configured": "Deze Paperless-gebruiker op deze server is al geconfigureerd.",
+      "single_instance_allowed": "Al geconfigureerd. Slechts één configuratie mogelijk.",
+      "reauth_successful": "Opnieuw aanmelden is gelukt.",
+      "reconfigure_successful": "Opnieuw configureren is gelukt.",
+      "wrong_account": "De token hoort bij een andere Paperless-gebruiker. Verwijder de integratie en voeg ze opnieuw toe om van gebruiker te wisselen.",
+      "unknown": "Onverwachte fout."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opties van Paperless Lookup",
+        "menu_options": {
+          "access": "Toegangstag",
+          "categories": "Categorieën en gebruikers",
+          "devices": "Toestellen",
+          "general": "Verversinterval"
+        }
+      },
+      "access": {
+        "title": "Toegangstag",
+        "description": "Alleen Paperless-documenten met deze tag zijn zichtbaar in Home Assistant.",
+        "data": {
+          "access_tag": "Toegangstag",
+          "admins_always": "Beheerders zien alle categorieën"
+        },
+        "data_description": {
+          "access_tag": "Zonder toegangstag is geen enkel document zichtbaar.",
+          "admins_always": "Beheerders van Home Assistant krijgen toegang tot elke categorie."
+        }
+      },
+      "categories": {
+        "title": "Categorieën",
+        "description": "Een categorie is een documenttype in Paperless. Documenten van andere types, of zonder type, zijn niet zichtbaar.",
+        "data": {
+          "categories": "Categorieën"
+        }
+      },
+      "category_users": {
+        "title": "Gebruikers per categorie",
+        "description": "Kies per categorie de Home Assistant-gebruikers die de documenten mogen zien."
+      },
+      "devices": {
+        "title": "Toestellen",
+        "description": "Documenten van een toestelcategorie (bv. handleidingen) worden aan toestellen gekoppeld via een custom field met één of meer modellen, gescheiden door ;.",
+        "data": {
+          "device_categories": "Toestelcategorieën",
+          "model_field": "Modelveld",
+          "zigbee2mqtt_fallback": "Zigbee2MQTT-link als reserve"
+        },
+        "data_description": {
+          "device_categories": "Alleen de categorieën die je onder Categorieën koos, staan in de lijst.",
+          "model_field": "Custom field (tekst) in Paperless met de toestelmodellen.",
+          "zigbee2mqtt_fallback": "Link naar de toestelpagina van Zigbee2MQTT als een Zigbee-toestel geen handleiding heeft."
+        }
+      },
+      "general": {
+        "title": "Verversinterval",
+        "data": {
+          "refresh_interval": "Verversinterval"
+        },
+        "data_description": {
+          "refresh_interval": "Hoe vaak de lijst met documenten opnieuw uit Paperless wordt geladen."
+        }
       }
     },
     "abort": {
-      "single_instance_allowed": "Al geconfigureerd. Slechts één configuratie mogelijk."
+      "not_loaded": "De integratie is niet geladen. Controleer eerst de verbinding met Paperless.",
+      "cannot_connect": "Kan geen verbinding maken met Paperless."
+    }
+  },
+  "exceptions": {
+    "invalid_auth": {
+      "message": "Paperless weigerde de API-token."
+    },
+    "wrong_account": {
+      "message": "De API-token hoort bij een andere Paperless-gebruiker."
+    },
+    "unsupported_version": {
+      "message": "Deze Paperless-versie wordt niet ondersteund. Paperless-ngx 3.0 of nieuwer is vereist."
+    },
+    "missing_permission": {
+      "message": "De Paperless-gebruiker mist deze rechten: {permissions}."
+    },
+    "cannot_connect": {
+      "message": "Kan geen verbinding maken met Paperless."
     }
   }
 }

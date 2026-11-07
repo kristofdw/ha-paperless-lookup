@@ -65,7 +65,7 @@ known-first-party = ["custom_components.paperless_lookup"]
 combine-as-imports = true
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S101", "S105", "S106", "SLF001", "PLR0913"]  # S105/S106: obviously fake tokens
+"tests/**" = ["S101", "S105", "S106", "SLF001", "PLR0913", "PLR0917"]  # S105/S106: obviously fake tokens
 "dev/**" = ["T20", "S310", "PLR0913"]
 
 [tool.mypy]

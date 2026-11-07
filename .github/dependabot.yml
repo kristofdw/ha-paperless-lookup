@@ -12,3 +12,7 @@ updates:
       # Pinned on purpose to the minimum supported Home Assistant version.
       - dependency-name: pytest-homeassistant-custom-component
       - dependency-name: homeassistant
+      # mypy >= 2.2 needs a newer ast-serialize than the pinned test plugin allows.
+      # Remove when the minimum Home Assistant version is raised.
+      - dependency-name: mypy
+        versions: [">=2.2"]

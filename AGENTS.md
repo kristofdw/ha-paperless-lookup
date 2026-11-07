@@ -13,10 +13,14 @@ and access is granted per category (Paperless document type) per Home Assistant 
   `tests/fixtures/` holds responses captured from the dev Paperless by `dev/capture_fixtures.py`.
 - `custom_components/paperless_lookup/api.py`: read-only Paperless client (API version 10, Paperless-ngx
   3.0.0 or newer). Never request document content or `/api/profile/` (it returns the token).
+- `frontend/`: TypeScript + Lit source of the sidebar panel and the dashboard card (`custom:paperless-lookup-card`),
+  tested with vitest. Vite builds one ES module to `custom_components/paperless_lookup/frontend/paperless-lookup.js`,
+  which is committed (HACS does not build); CI fails when it does not match the sources.
 - `dev/`: Docker Compose with Home Assistant + Paperless-ngx + Redis and a seed script with synthetic
   documents (see `dev/README.md`).
 - `script/uv`: uv wrapper; `script/git-hooks/`: git hooks.
-- `.github/workflows/`: lint (pre-commit), tests (minimum and latest Home Assistant), hassfest, HACS.
+- `.github/workflows/`: lint (pre-commit), tests (minimum and latest Home Assistant), frontend (typecheck,
+  vitest, build check), hassfest, HACS.
 
 ## Build and test
 - Python tooling runs on **Linux/WSL** only (Home Assistant does not run on Windows). Frontend tooling
@@ -27,6 +31,8 @@ and access is granted per category (Paperless document type) per Home Assistant 
   - `bash script/uv run pytest` (coverage gate 95 %)
   - `bash script/uv run pre-commit run --all-files` (ruff, ruff format, mypy strict, gitleaks, …)
   - From Windows PowerShell: `wsl -d Ubuntu --cd <repo> -- bash -lc "bash script/uv run pytest"`.
+- Frontend (node 24, Windows or Linux): `cd frontend && npm ci && npm run check` (typecheck, tests, build), then
+  commit the rebuilt bundle together with the sources.
 - Enable the hook once per clone: `git config core.hooksPath script/git-hooks`. Commits from Windows Git
   forward the hook to WSL. `.gitattributes` forces LF so Windows Git and WSL Git agree.
 - Minimum supported Home Assistant is pinned via `pytest-homeassistant-custom-component` in

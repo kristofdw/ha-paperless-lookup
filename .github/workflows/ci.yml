@@ -52,4 +52,26 @@ jobs:
         run: |
           uv venv --python 3.14
           uv pip install pytest-homeassistant-custom-component
+          # The frontend package that this Home Assistant version pins (needed by panel_custom).
+          uv pip install "$(.venv/bin/python -c "import importlib.util, json, pathlib; p = pathlib.Path(importlib.util.find_spec('homeassistant').origin).parent / 'components/frontend/manifest.json'; print(json.loads(p.read_text())['requirements'][0])")"
       - run: .venv/bin/pytest --cov-report=xml
+
+  frontend:
+    name: Frontend (typecheck, tests, build check)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      # HACS installs the committed bundle: it must match the sources.
+      - run: git diff --exit-code -- ../custom_components/paperless_lookup/frontend/

@@ -8,6 +8,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
 from .api import (
     PaperlessAuthError,
@@ -20,12 +21,14 @@ from .api import (
 from .const import CONF_PAPERLESS_USER_ID, DOMAIN
 from .coordinator import PaperlessLookupCoordinator
 from .helpers import create_client, missing_permissions
+from .panel import async_register_frontend, async_register_panel, async_remove_panel
 from .store import LinkStore
 from .views import PaperlessDocumentView
 from .websocket_api import async_register as async_register_websocket_api
 
 PLATFORMS: list[Platform] = []
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+DATA_MODULE_URL: HassKey[str] = HassKey(f"{DOMAIN}_module_url")
 
 
 @dataclass(slots=True)
@@ -42,9 +45,10 @@ type PaperlessLookupConfigEntry = ConfigEntry[PaperlessLookupData]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Register the websocket API and the document view (once)."""
+    """Register the websocket API, the document view and the frontend bundle (once)."""
     async_register_websocket_api(hass)
     hass.http.register_view(PaperlessDocumentView(hass))
+    hass.data[DATA_MODULE_URL] = await async_register_frontend(hass)
     return True
 
 
@@ -106,6 +110,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PaperlessLookupConfigEnt
 
     entry.async_on_unload(hass.bus.async_listen(dr.EVENT_DEVICE_REGISTRY_UPDATED, _device_removed))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await async_register_panel(hass, hass.data[DATA_MODULE_URL])
+    entry.async_on_unload(lambda: async_remove_panel(hass))
     return True
 
 

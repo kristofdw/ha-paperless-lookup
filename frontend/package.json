@@ -1,0 +1,23 @@
+{
+  "name": "paperless-lookup-frontend",
+  "private": true,
+  "version": "0.0.1",
+  "description": "Panel and card of Paperless Lookup for Home Assistant",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "check": "npm run typecheck && npm run test && npm run build"
+  },
+  "dependencies": {
+    "lit": "3.3.3"
+  },
+  "devDependencies": {
+    "happy-dom": "21.0.4",
+    "typescript": "7.0.2",
+    "vite": "8.3.6",
+    "vitest": "5.1.0"
+  }
+}

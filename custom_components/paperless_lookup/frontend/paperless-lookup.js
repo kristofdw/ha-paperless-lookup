@@ -1271,20 +1271,20 @@ var He = class extends G {
             </button>`)}
         </div>
         <div class="filters">
-          <select
-            aria-label=${this._t("search.all_stores")}
-            @change=${(e) => {
+          ${e?.correspondents.length ? P`<select
+                aria-label=${this._t("search.all_stores")}
+                @change=${(e) => {
 			let t = e.target.value;
 			this._update({ correspondent: t ? Number(t) : null });
 		}}
-          >
-            <option value="" ?selected=${n.correspondent === null}>
-              ${this._t("search.all_stores")}
-            </option>
-            ${e?.correspondents.map((e) => P`<option value=${e.id} ?selected=${n.correspondent === e.id}>
-                  ${e.name}
-                </option>`)}
-          </select>
+              >
+                <option value="" ?selected=${n.correspondent === null}>
+                  ${this._t("search.all_stores")}
+                </option>
+                ${e.correspondents.map((e) => P`<option value=${e.id} ?selected=${n.correspondent === e.id}>
+                      ${e.name}
+                    </option>`)}
+              </select>` : I}
           <label
             >${this._t("search.from")}
             <input

@@ -184,10 +184,20 @@ class PaperlessLookupCoordinator(DataUpdateCoordinator[DocumentIndex]):
         for doc in self.data.documents.values():
             per_type[str(doc.document_type)] = per_type.get(str(doc.document_type), 0) + 1
         store = self.store.data
+        documents = self.data.documents.values()
+        with_correspondent = [doc for doc in documents if doc.correspondent is not None]
         return {
             "last_update_success": self.last_update_success,
+            # Objects the Paperless user can see (owned objects must be shared with it).
+            "document_types_visible": len(self.data.document_types),
+            "correspondents_visible": len(self.data.correspondents),
             "documents": len(self.data.documents),
             "documents_per_category": dict(sorted(per_type.items())),
+            "documents_with_correspondent": len(with_correspondent),
+            # A correspondent the Paperless user cannot see: no store name or store filter.
+            "documents_with_hidden_correspondent": sum(
+                1 for doc in with_correspondent if doc.correspondent not in self.data.correspondents
+            ),
             "documents_with_models": sum(
                 1 for doc in self.data.documents.values() if doc.model_keys
             ),

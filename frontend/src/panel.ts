@@ -253,23 +253,25 @@ export class PaperlessLookupPanel extends LitElement {
           )}
         </div>
         <div class="filters">
-          <select
-            aria-label=${this._t("search.all_stores")}
-            @change=${(event: Event) => {
-              const value = (event.target as HTMLSelectElement).value;
-              this._update({ correspondent: value ? Number(value) : null });
-            }}
-          >
-            <option value="" ?selected=${state.correspondent === null}>
-              ${this._t("search.all_stores")}
-            </option>
-            ${filters?.correspondents.map(
-              (item) =>
-                html`<option value=${item.id} ?selected=${state.correspondent === item.id}>
-                  ${item.name}
-                </option>`,
-            )}
-          </select>
+          ${filters?.correspondents.length
+            ? html`<select
+                aria-label=${this._t("search.all_stores")}
+                @change=${(event: Event) => {
+                  const value = (event.target as HTMLSelectElement).value;
+                  this._update({ correspondent: value ? Number(value) : null });
+                }}
+              >
+                <option value="" ?selected=${state.correspondent === null}>
+                  ${this._t("search.all_stores")}
+                </option>
+                ${filters.correspondents.map(
+                  (item) =>
+                    html`<option value=${item.id} ?selected=${state.correspondent === item.id}>
+                      ${item.name}
+                    </option>`,
+                )}
+              </select>`
+            : nothing}
           <label
             >${this._t("search.from")}
             <input

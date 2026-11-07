@@ -12,7 +12,7 @@ from pytest_homeassistant_custom_component.test_util.aiohttp import AiohttpClien
 from custom_components.paperless_lookup.const import CONF_CATEGORIES
 from custom_components.paperless_lookup.diagnostics import async_get_config_entry_diagnostics
 
-from .conftest import PAPERLESS_USERNAME, TEST_TOKEN, mock_paperless
+from .conftest import PAPERLESS_USERNAME, TEST_TOKEN, load_json_fixture, mock_paperless
 
 INTEGRATION = Path(__file__).parent.parent / "custom_components" / "paperless_lookup"
 
@@ -54,8 +54,12 @@ async def test_diagnostics_redacted(
     assert diagnostics["paperless"]["user"]["missing_permissions"] == []
     assert diagnostics["index"] == {
         "last_update_success": True,
+        "document_types_visible": 5,
+        "correspondents_visible": 7,
         "documents": 7,
         "documents_per_category": {"1": 4, "2": 3},
+        "documents_with_correspondent": 7,
+        "documents_with_hidden_correspondent": 0,
         "documents_with_models": 4,
         "devices_with_links": 0,
         "devices_with_unlinks": 0,
@@ -63,6 +67,25 @@ async def test_diagnostics_redacted(
     }
     for title in ("receipt", "manual", "Washing"):
         assert title not in text
+
+
+async def test_diagnostics_hidden_correspondents(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the count of documents whose correspondent the Paperless user cannot see."""
+    correspondents = load_json_fixture("correspondents")
+    correspondents["results"] = [item for item in correspondents["results"] if item["id"] == 1]
+    mock_paperless(aioclient_mock, correspondents=correspondents)
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    index = (await async_get_config_entry_diagnostics(hass, mock_config_entry))["index"]
+
+    assert index["correspondents_visible"] == 1
+    assert index["documents_with_correspondent"] == 9
+    # Only the two IKEA manuals have a visible correspondent.
+    assert index["documents_with_hidden_correspondent"] == 7
 
 
 def _keys(data: Any, prefix: str = "") -> set[str]:

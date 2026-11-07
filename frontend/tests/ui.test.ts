@@ -43,6 +43,28 @@ describe("panel", () => {
     expect(hass.calls.map((call) => call.type)).toEqual(["paperless_lookup/access"]);
   });
 
+  it("hides the store filter when there are no stores", async () => {
+    const hass = fakeHass({
+      access: () => access(),
+      filters: () => ({ ...filters(), correspondents: [] }),
+      search: () => ({ count: 0, results: [] }),
+      sign_documents: () => ({ paths: {} }),
+    });
+    const panel = await mountPanel(hass);
+    expect(panel.shadowRoot!.querySelector("select")).toBeNull();
+
+    document.body.innerHTML = "";
+    const withStores = await mountPanel(
+      fakeHass({
+        access: () => access(),
+        filters,
+        search: () => ({ count: 0, results: [] }),
+        sign_documents: () => ({ paths: {} }),
+      }),
+    );
+    expect(withStores.shadowRoot!.querySelectorAll("select option")).toHaveLength(2);
+  });
+
   it("shows not loaded and connection errors", async () => {
     const notLoaded = await mountPanel(
       fakeHass({

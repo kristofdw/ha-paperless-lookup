@@ -12,7 +12,7 @@ documents searchable in [Home Assistant](https://www.home-assistant.io/):
 - **Access per category per Home Assistant user:** for example manuals for everyone, receipts only for adults.
 - Home Assistant talks to Paperless over your local network. Browsers and phones never need a Paperless token.
 
-Requires Home Assistant 2026.6 or newer.
+Requires Home Assistant 2026.10.4 or newer.
 
 ## Development
 

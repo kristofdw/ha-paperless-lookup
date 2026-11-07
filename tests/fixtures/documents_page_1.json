@@ -1,0 +1,72 @@
+{
+  "count": 9,
+  "next": "http://paperless.test:8000/api/documents/?fields=id%2Ctitle%2Cdocument_type%2Ccorrespondent%2Ccreated%2Ctags%2Ccustom_fields%2Cmime_type&ordering=-created&page=2&page_size=5&tags__id__all=1",
+  "previous": null,
+  "results": [
+    {
+      "id": 7,
+      "correspondent": 6,
+      "document_type": 2,
+      "title": "Groceries receipt",
+      "tags": [
+        1
+      ],
+      "created": "2026-10-30",
+      "custom_fields": [],
+      "mime_type": "application/pdf"
+    },
+    {
+      "id": 6,
+      "correspondent": 5,
+      "document_type": 2,
+      "title": "Paint and brushes receipt",
+      "tags": [
+        1
+      ],
+      "created": "2025-09-12",
+      "custom_fields": [],
+      "mime_type": "application/pdf"
+    },
+    {
+      "id": 5,
+      "correspondent": 4,
+      "document_type": 2,
+      "title": "Vacuum cleaner receipt",
+      "tags": [
+        1
+      ],
+      "created": "2025-06-01",
+      "custom_fields": [],
+      "mime_type": "application/pdf"
+    },
+    {
+      "id": 8,
+      "correspondent": 4,
+      "document_type": 3,
+      "title": "Washing machine invoice",
+      "tags": [
+        1
+      ],
+      "created": "2025-02-17",
+      "custom_fields": [],
+      "mime_type": "application/pdf"
+    },
+    {
+      "id": 9,
+      "correspondent": 4,
+      "document_type": 4,
+      "title": "Washing machine warranty",
+      "tags": [
+        1
+      ],
+      "created": "2025-02-17",
+      "custom_fields": [
+        {
+          "value": "W800",
+          "field": 1
+        }
+      ],
+      "mime_type": "application/pdf"
+    }
+  ]
+}

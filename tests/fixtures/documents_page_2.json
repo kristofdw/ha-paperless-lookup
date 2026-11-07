@@ -1,0 +1,75 @@
+{
+  "count": 9,
+  "next": null,
+  "previous": "http://paperless.test:8000/api/documents/?fields=id%2Ctitle%2Cdocument_type%2Ccorrespondent%2Ccreated%2Ctags%2Ccustom_fields%2Cmime_type&ordering=-created&page_size=5&tags__id__all=1",
+  "results": [
+    {
+      "id": 2,
+      "correspondent": 1,
+      "document_type": 1,
+      "title": "STYRBAR remote manual",
+      "tags": [
+        1
+      ],
+      "created": "2024-05-10",
+      "custom_fields": [
+        {
+          "value": "E2001/E2002",
+          "field": 1
+        }
+      ],
+      "mime_type": "application/pdf"
+    },
+    {
+      "id": 1,
+      "correspondent": 1,
+      "document_type": 1,
+      "title": "TRADFRI remote control manual",
+      "tags": [
+        1
+      ],
+      "created": "2024-03-02",
+      "custom_fields": [
+        {
+          "value": "E1524/E1810",
+          "field": 1
+        }
+      ],
+      "mime_type": "application/pdf"
+    },
+    {
+      "id": 3,
+      "correspondent": 2,
+      "document_type": 1,
+      "title": "Aqara motion and door sensor manual",
+      "tags": [
+        1
+      ],
+      "created": "2023-11-20",
+      "custom_fields": [
+        {
+          "value": "RTCGQ11LM; MCCGQ11LM",
+          "field": 1
+        }
+      ],
+      "mime_type": "application/pdf"
+    },
+    {
+      "id": 4,
+      "correspondent": 3,
+      "document_type": 1,
+      "title": "Hue white ambiance bulb manual",
+      "tags": [
+        1
+      ],
+      "created": "2022-08-14",
+      "custom_fields": [
+        {
+          "value": "9290022169",
+          "field": 1
+        }
+      ],
+      "mime_type": "application/pdf"
+    }
+  ]
+}

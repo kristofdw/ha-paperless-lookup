@@ -1,0 +1,49 @@
+{
+  "count": 2,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "id": 9,
+      "correspondent": 4,
+      "document_type": 4,
+      "title": "Washing machine warranty",
+      "tags": [
+        1
+      ],
+      "created": "2025-02-17",
+      "custom_fields": [
+        {
+          "value": "W800",
+          "field": 1
+        }
+      ],
+      "mime_type": "application/pdf",
+      "__search_hit__": {
+        "score": 5.2335920333862305,
+        "highlights": "<b>Washing</b> machine warranty\nWarranty certificate W800\nValid until 2027-02-17",
+        "note_highlights": null,
+        "rank": 1
+      }
+    },
+    {
+      "id": 8,
+      "correspondent": 4,
+      "document_type": 3,
+      "title": "Washing machine invoice",
+      "tags": [
+        1
+      ],
+      "created": "2025-02-17",
+      "custom_fields": [],
+      "mime_type": "application/pdf",
+      "__search_hit__": {
+        "score": 5.2335920333862305,
+        "highlights": "<b>Washing</b> machine invoice\nDemo Electronics - invoice 2025-017\n<b>Washing</b> machine W800 EUR 649.00",
+        "note_highlights": null,
+        "rank": 2
+      }
+    }
+  ],
+  "corrected_query": null
+}

@@ -1,0 +1,14 @@
+{
+  "count": 1,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "id": 1,
+      "name": "HA model",
+      "data_type": "string",
+      "extra_data": null,
+      "document_count": 6
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "count": 7,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "id": 2,
+      "slug": "aqara",
+      "name": "Aqara",
+      "match": "",
+      "matching_algorithm": 0,
+      "is_insensitive": true,
+      "document_count": 1,
+      "owner": 2,
+      "user_can_change": false
+    },
+    {
+      "id": 4,
+      "slug": "demo-electronics",
+      "name": "Demo Electronics",
+      "match": "",
+      "matching_algorithm": 0,
+      "is_insensitive": true,
+      "document_count": 3,
+      "owner": 2,
+      "user_can_change": false
+    },
+    {
+      "id": 5,
+      "slug": "example-hardware-store",
+      "name": "Example Hardware Store",
+      "match": "",
+      "matching_algorithm": 0,
+      "is_insensitive": true,
+      "document_count": 1,
+      "owner": 2,
+      "user_can_change": false
+    },
+    {
+      "id": 7,
+      "slug": "fictional-bank",
+      "name": "Fictional Bank",
+      "match": "",
+      "matching_algorithm": 0,
+      "is_insensitive": true,
+      "document_count": 1,
+      "owner": 2,
+      "user_can_change": false
+    },
+    {
+      "id": 1,
+      "slug": "ikea",
+      "name": "IKEA",
+      "match": "",
+      "matching_algorithm": 0,
+      "is_insensitive": true,
+      "document_count": 3,
+      "owner": 2,
+      "user_can_change": false
+    },
+    {
+      "id": 3,
+      "slug": "philips-hue",
+      "name": "Philips Hue",
+      "match": "",
+      "matching_algorithm": 0,
+      "is_insensitive": true,
+      "document_count": 1,
+      "owner": 2,
+      "user_can_change": false
+    },
+    {
+      "id": 6,
+      "slug": "sample-supermarket",
+      "name": "Sample Supermarket",
+      "match": "",
+      "matching_algorithm": 0,
+      "is_insensitive": true,
+      "document_count": 1,
+      "owner": 2,
+      "user_can_change": false
+    }
+  ]
+}

@@ -9,7 +9,10 @@ and access is granted per category (Paperless document type) per Home Assistant 
 
 ## Layout
 - `custom_components/paperless_lookup/`: the integration (manifest, config flow, translations en/nl).
-- `tests/`: pytest with `pytest-homeassistant-custom-component`.
+- `tests/`: pytest with `pytest-homeassistant-custom-component`. HTTP is mocked with `aioclient_mock`;
+  `tests/fixtures/` holds responses captured from the dev Paperless by `dev/capture_fixtures.py`.
+- `custom_components/paperless_lookup/api.py`: read-only Paperless client (API version 10, Paperless-ngx
+  3.0.0 or newer). Never request document content or `/api/profile/` (it returns the token).
 - `dev/`: Docker Compose with Home Assistant + Paperless-ngx + Redis and a seed script with synthetic
   documents (see `dev/README.md`).
 - `script/uv`: uv wrapper; `script/git-hooks/`: git hooks.

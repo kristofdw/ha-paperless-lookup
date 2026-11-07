@@ -19,7 +19,7 @@ docker compose --profile seed run --rm seed
 
 The seed script is idempotent. It creates:
 
-- user `ha-lookup` with view permissions only; its API token is written to `dev/data/ha-lookup.token`,
+- user `ha-lookup` with view permissions only (including `view_uisettings`); its API token is written to `dev/data/ha-lookup.token`,
 - tags `HA` (access tag) and `Finance`,
 - document types Manual, Receipt, Invoice, Warranty, Bank statement,
 - custom field `HA model` (manuals list one or more models separated by `;`),
@@ -34,6 +34,19 @@ The integration is mounted read-only into Home Assistant at
 
 Add it under *Settings → Devices & services → Add integration → Paperless Lookup* with URL
 `http://paperless:8000` and the token from `dev/data/ha-lookup.token`.
+
+## Test fixtures
+
+The JSON fixtures in `tests/fixtures/` are real responses of this dev Paperless (synthetic data). After
+changing the seed data or the requests of the API client, capture them again (on the host, where the
+token file is readable):
+
+```bash
+python -I dev/capture_fixtures.py
+```
+
+The script only talks to a local Paperless, rewrites pagination links to the fake test URL and refuses to
+write a fixture that contains the token.
 
 ## Versions
 

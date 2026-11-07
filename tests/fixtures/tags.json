@@ -1,0 +1,40 @@
+{
+  "count": 2,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "id": 2,
+      "slug": "finance",
+      "name": "Finance",
+      "color": "#a6cee3",
+      "text_color": "#000000",
+      "match": "",
+      "matching_algorithm": 0,
+      "is_insensitive": true,
+      "is_inbox_tag": false,
+      "document_count": 1,
+      "owner": 2,
+      "user_can_change": false,
+      "parent": null,
+      "children": []
+    },
+    {
+      "id": 1,
+      "slug": "ha",
+      "name": "HA",
+      "color": "#a6cee3",
+      "text_color": "#000000",
+      "match": "",
+      "matching_algorithm": 0,
+      "is_insensitive": true,
+      "is_inbox_tag": false,
+      "document_count": 9,
+      "owner": 2,
+      "user_can_change": false,
+      "parent": null,
+      "children": []
+    }
+  ],
+  "display_count": 2
+}

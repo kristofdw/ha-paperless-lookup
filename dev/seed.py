@@ -36,6 +36,8 @@ VIEW_PERMISSIONS = [
     "view_correspondent",
     "view_customfield",
     "view_note",
+    # Needed for /api/ui_settings/, which tells the integration who the token belongs to.
+    "view_uisettings",
 ]
 
 TAGS = [ACCESS_TAG, "Finance"]

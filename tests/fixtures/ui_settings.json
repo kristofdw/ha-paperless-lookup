@@ -1,0 +1,34 @@
+{
+  "user": {
+    "id": 3,
+    "username": "ha-lookup",
+    "is_staff": false,
+    "is_superuser": false,
+    "groups": []
+  },
+  "settings": {
+    "update_checking": {
+      "backend_setting": "default"
+    },
+    "trash_delay": 30,
+    "version": "3.3.4",
+    "app_title": null,
+    "app_logo": null,
+    "auditlog_enabled": true,
+    "remote_ocr": {
+      "configured": false,
+      "mode": "always"
+    },
+    "email_enabled": false,
+    "ai_enabled": false
+  },
+  "permissions": [
+    "view_tag",
+    "view_note",
+    "view_documenttype",
+    "view_correspondent",
+    "view_document",
+    "view_uisettings",
+    "view_customfield"
+  ]
+}

@@ -1,5 +1,7 @@
 """Common fixtures for the Paperless Lookup tests."""
 
+import json
+from pathlib import Path
 from typing import Any
 
 from homeassistant.const import CONF_API_TOKEN, CONF_URL, CONF_VERIFY_SSL
@@ -14,6 +16,13 @@ MOCK_CONFIG: dict[str, Any] = {
     CONF_API_TOKEN: "fake-test-token-0000",
     CONF_VERIFY_SSL: True,
 }
+
+FIXTURES = Path(__file__).parent / "fixtures"
+
+
+def load_json_fixture(name: str) -> Any:
+    """Return a JSON fixture captured from the dev Paperless (see dev/capture_fixtures.py)."""
+    return json.loads((FIXTURES / f"{name}.json").read_text(encoding="utf-8"))
 
 
 @pytest.fixture(autouse=True)

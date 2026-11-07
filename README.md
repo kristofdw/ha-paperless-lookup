@@ -12,7 +12,11 @@ documents searchable in [Home Assistant](https://www.home-assistant.io/):
 - **Access per category per Home Assistant user:** for example manuals for everyone, receipts only for adults.
 - Home Assistant talks to Paperless over your local network. Browsers and phones never need a Paperless token.
 
-Requires Home Assistant 2026.10.4 or newer.
+Requires Home Assistant 2026.10.4 or newer and Paperless-ngx 3.0.0 or newer (REST API version 10).
+
+The integration only reads from Paperless. Use a dedicated Paperless user with view permissions on
+documents, tags, document types, correspondents, custom fields and UI settings (`view_uisettings`, used
+to show which user the API token belongs to).
 
 ## Development
 

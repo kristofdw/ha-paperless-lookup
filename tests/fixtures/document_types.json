@@ -1,0 +1,62 @@
+{
+  "count": 5,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "id": 5,
+      "slug": "bank-statement",
+      "name": "Bank statement",
+      "match": "",
+      "matching_algorithm": 0,
+      "is_insensitive": true,
+      "document_count": 1,
+      "owner": 2,
+      "user_can_change": false
+    },
+    {
+      "id": 3,
+      "slug": "invoice",
+      "name": "Invoice",
+      "match": "",
+      "matching_algorithm": 0,
+      "is_insensitive": true,
+      "document_count": 1,
+      "owner": 2,
+      "user_can_change": false
+    },
+    {
+      "id": 1,
+      "slug": "manual",
+      "name": "Manual",
+      "match": "",
+      "matching_algorithm": 0,
+      "is_insensitive": true,
+      "document_count": 5,
+      "owner": 2,
+      "user_can_change": false
+    },
+    {
+      "id": 2,
+      "slug": "receipt",
+      "name": "Receipt",
+      "match": "",
+      "matching_algorithm": 0,
+      "is_insensitive": true,
+      "document_count": 3,
+      "owner": 2,
+      "user_can_change": false
+    },
+    {
+      "id": 4,
+      "slug": "warranty",
+      "name": "Warranty",
+      "match": "",
+      "matching_algorithm": 0,
+      "is_insensitive": true,
+      "document_count": 1,
+      "owner": 2,
+      "user_can_change": false
+    }
+  ]
+}

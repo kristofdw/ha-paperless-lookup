@@ -1,0 +1,62 @@
+# Local development environment: Home Assistant + Paperless-ngx (+ Redis) with SYNTHETIC data only.
+# Usage: see dev/README.md. All ports are bound to 127.0.0.1.
+name: paperless-lookup-dev
+
+services:
+  redis:
+    image: docker.io/library/redis:8
+    restart: unless-stopped
+    volumes:
+      - redis:/data
+
+  paperless:
+    image: ghcr.io/paperless-ngx/paperless-ngx:${PAPERLESS_VERSION:-3.3.4}
+    restart: unless-stopped
+    depends_on:
+      - redis
+    ports:
+      - "127.0.0.1:${PAPERLESS_PORT:-8011}:8000"
+    environment:
+      PAPERLESS_REDIS: redis://redis:6379
+      PAPERLESS_URL: http://localhost:${PAPERLESS_PORT:-8011}
+      PAPERLESS_SECRET_KEY: ${PAPERLESS_SECRET_KEY:?set PAPERLESS_SECRET_KEY in dev/.env}
+      PAPERLESS_ADMIN_USER: ${PAPERLESS_ADMIN_USER:-admin}
+      PAPERLESS_ADMIN_PASSWORD: ${PAPERLESS_ADMIN_PASSWORD:?set PAPERLESS_ADMIN_PASSWORD in dev/.env}
+      PAPERLESS_TIME_ZONE: Europe/Brussels
+      PAPERLESS_OCR_LANGUAGE: eng
+    volumes:
+      # Named volumes: SQLite on a Windows bind mount is slow and can lock.
+      - paperless-data:/usr/src/paperless/data
+      - paperless-media:/usr/src/paperless/media
+
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:${HA_VERSION:-2026.6.0}
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${HA_PORT:-8124}:8123"
+    environment:
+      TZ: Europe/Brussels
+    volumes:
+      - homeassistant-config:/config
+      - ../custom_components/paperless_lookup:/config/custom_components/paperless_lookup:ro
+
+  # One-shot: creates the synthetic Paperless content. `docker compose --profile seed run --rm seed`
+  seed:
+    profiles: [seed]
+    image: docker.io/library/python:3.14-alpine
+    depends_on:
+      - paperless
+    environment:
+      PAPERLESS_URL: http://paperless:8000
+      PAPERLESS_ADMIN_USER: ${PAPERLESS_ADMIN_USER:-admin}
+      PAPERLESS_ADMIN_PASSWORD: ${PAPERLESS_ADMIN_PASSWORD:?set PAPERLESS_ADMIN_PASSWORD in dev/.env}
+      SEED_TOKEN_FILE: /seed/data/ha-lookup.token
+    volumes:
+      - ./:/seed
+    command: ["python", "-I", "/seed/seed.py"]
+
+volumes:
+  redis:
+  paperless-data:
+  paperless-media:
+  homeassistant-config:

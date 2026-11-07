@@ -1,0 +1,5 @@
+# Same line endings for Windows Git and WSL Git working on one checkout.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.pdf binary

@@ -1,0 +1,103 @@
+[project]
+name = "ha-paperless-lookup"
+version = "0.0.1"
+description = "Paperless Lookup for Home Assistant: look up Paperless-ngx documents from Home Assistant."
+readme = "README.md"
+license = "Apache-2.0"
+# Home Assistant 2026.6 (the minimum supported version) requires Python 3.14.
+requires-python = ">=3.14.2"
+
+[dependency-groups]
+dev = [
+    # Pins homeassistant==2026.6.0, the minimum supported Home Assistant version (see hacs.json).
+    "pytest-homeassistant-custom-component==0.13.336",
+    # Newest mypy that fits the ast-serialize pin of the test plugin above.
+    "mypy==2.1.0",
+    "ruff==0.17.4",
+    "pre-commit==4.7.0",
+]
+
+[tool.uv]
+# This is a Home Assistant custom integration, not an installable Python package.
+package = false
+
+[tool.ruff]
+target-version = "py314"
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "A",     # builtins
+    "ASYNC", # async pitfalls
+    "B",     # bugbear
+    "C4",    # comprehensions
+    "D",     # docstrings
+    "E",     # pycodestyle errors
+    "F",     # pyflakes
+    "G",     # logging format
+    "I",     # isort
+    "LOG",   # logging
+    "PERF",  # performance
+    "PIE",
+    "PL",    # pylint
+    "PT",    # pytest style
+    "RET",
+    "RUF",
+    "S",     # bandit (security)
+    "SIM",
+    "SLF",   # private member access
+    "T20",   # print
+    "TRY",
+    "UP",    # pyupgrade
+    "W",     # pycodestyle warnings
+]
+ignore = [
+    "D202",    # blank line after function docstring (HA style)
+    "PLR2004", # magic values in comparisons
+    "TRY003",  # long messages in exception constructors
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.isort]
+force-sort-within-sections = true
+known-first-party = ["custom_components.paperless_lookup"]
+combine-as-imports = true
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "SLF001", "PLR0913"]
+"dev/**" = ["T20", "S310", "PLR0913"]
+
+[tool.mypy]
+python_version = "3.14"
+files = ["custom_components", "tests", "dev"]
+mypy_path = "."
+explicit_package_bases = true
+strict = true
+warn_unreachable = true
+enable_error_code = ["ignore-without-code", "redundant-self", "truthy-iterable"]
+
+[[tool.mypy.overrides]]
+# The plugin ships without py.typed; its code is typed well enough to use.
+module = ["pytest_homeassistant_custom_component.*"]
+follow_untyped_imports = true
+
+[[tool.mypy.overrides]]
+# State checks before/after an await look "non-overlapping" to mypy's narrowing.
+module = ["tests.*"]
+disable_error_code = ["comparison-overlap"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+addopts = [
+    "--cov=custom_components.paperless_lookup",
+    "--cov-branch",
+    "--cov-report=term-missing",
+    "--cov-fail-under=95",
+]
+
+[tool.coverage.report]
+exclude_also = ["if TYPE_CHECKING:"]

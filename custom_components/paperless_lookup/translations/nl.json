@@ -1,0 +1,23 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Verbinden met Paperless-ngx",
+        "description": "Gebruik een aparte Paperless-gebruiker met alleen leesrechten.",
+        "data": {
+          "url": "URL",
+          "api_token": "API-token",
+          "verify_ssl": "SSL-certificaat controleren"
+        },
+        "data_description": {
+          "url": "Adres van je Paperless-ngx-server, bijvoorbeeld http://192.168.1.10:8000",
+          "api_token": "API-token van de Paperless-gebruiker die Home Assistant gebruikt",
+          "verify_ssl": "Het TLS-certificaat van de server controleren (aanbevolen)"
+        }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Al geconfigureerd. Slechts één configuratie mogelijk."
+    }
+  }
+}

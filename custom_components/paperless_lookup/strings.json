@@ -1,0 +1,23 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to Paperless-ngx",
+        "description": "Use a dedicated Paperless user with view permissions only.",
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]",
+          "api_token": "[%key:common::config_flow::data::api_token%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "url": "Address of your Paperless-ngx server, for example http://192.168.1.10:8000",
+          "api_token": "API token of the Paperless user that Home Assistant uses",
+          "verify_ssl": "Check the TLS certificate of the server (recommended)"
+        }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    }
+  }
+}

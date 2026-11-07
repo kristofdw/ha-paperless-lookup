@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Git pre-commit hook (enable with: git config core.hooksPath script/git-hooks).
+# The Python tooling only runs on Linux/WSL, so on Windows (Git for Windows) the
+# hook is forwarded to WSL Ubuntu, where pre-commit runs from the project venv.
+set -euo pipefail
+
+case "$(uname -s)" in
+  MINGW* | MSYS* | CYGWIN*)
+    repo_root="$(git rev-parse --show-toplevel)"
+    win_root="$(cygpath -w "$repo_root")"
+    export MSYS_NO_PATHCONV=1
+    exec wsl.exe -d "${PAPERLESS_LOOKUP_WSL_DISTRO:-Ubuntu}" --cd "$win_root" -- \
+      bash -lc 'bash script/uv run --frozen pre-commit run --hook-stage pre-commit'
+    ;;
+  *)
+    exec bash "$(git rev-parse --show-toplevel)/script/uv" run --frozen \
+      pre-commit run --hook-stage pre-commit
+    ;;
+esac

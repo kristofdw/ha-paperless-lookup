@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Run uv with the virtualenv in the WSL home instead of on /mnt/c (which is slow).
+# Usage (in WSL, from the repo root): script/uv sync | script/uv run pytest
+set -euo pipefail
+export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-$HOME/.venvs/ha-paperless-lookup}"
+export PATH="$HOME/.local/bin:$PATH"
+exec uv "$@"

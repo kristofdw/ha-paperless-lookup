@@ -1,0 +1,13 @@
+{
+  "domain": "paperless_lookup",
+  "name": "Paperless Lookup",
+  "codeowners": ["@kristofdw"],
+  "config_flow": true,
+  "documentation": "https://github.com/kristofdw/ha-paperless-lookup",
+  "integration_type": "service",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/kristofdw/ha-paperless-lookup/issues",
+  "requirements": [],
+  "single_config_entry": true,
+  "version": "0.0.1"
+}

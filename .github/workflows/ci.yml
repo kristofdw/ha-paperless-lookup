@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint (pre-commit, ruff, mypy, gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v10
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+      - run: uv run --frozen pre-commit run --all-files --show-diff-on-failure
+
+  tests:
+    name: Tests (Home Assistant ${{ matrix.ha }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # "minimum" = the locked versions (minimum supported Home Assistant, see hacs.json).
+        # "latest" = the newest pytest-homeassistant-custom-component on PyPI.
+        ha: [minimum, latest]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+        with:
+          enable-cache: true
+      - if: matrix.ha == 'minimum'
+        run: uv sync --locked
+      - if: matrix.ha == 'latest'
+        # Fresh venv without the lint pins (mypy etc.), which may not fit the newest plugin.
+        run: |
+          uv venv --python 3.14
+          uv pip install pytest-homeassistant-custom-component
+      - run: .venv/bin/pytest --cov-report=xml

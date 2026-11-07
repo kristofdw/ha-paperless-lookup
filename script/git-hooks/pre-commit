@@ -9,6 +9,12 @@ case "$(uname -s)" in
     repo_root="$(git rev-parse --show-toplevel)"
     win_root="$(cygpath -w "$repo_root")"
     export MSYS_NO_PATHCONV=1
+    # `git commit -a` / `git commit <paths>` use a temporary index: pass it on to WSL (path translated).
+    if [[ -n "${GIT_INDEX_FILE:-}" ]]; then
+      GIT_INDEX_FILE="$(cygpath -w "$GIT_INDEX_FILE")"
+      export GIT_INDEX_FILE
+      export WSLENV="${WSLENV:+$WSLENV:}GIT_INDEX_FILE/p"
+    fi
     exec wsl.exe -d "${PAPERLESS_LOOKUP_WSL_DISTRO:-Ubuntu}" --cd "$win_root" -- \
       bash -lc 'bash script/uv run --frozen pre-commit run --hook-stage pre-commit'
     ;;

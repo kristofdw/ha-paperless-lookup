@@ -105,9 +105,7 @@ Log in to Paperless as `ha-lookup`, open *My Profile* (user menu at the top righ
 
 ### With HACS (recommended)
 
-[![Open your Home Assistant instance and open this repository in HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=kristofdw&repository=ha-paperless-lookup&category=integration)
-
-The button above opens the repository in HACS. Or do it by hand:
+This integration is not in the HACS default list yet, so add it as a custom repository:
 
 1. Open **HACS** in Home Assistant.
 2. Open the menu (⋮ at the top right) → **Custom repositories**.

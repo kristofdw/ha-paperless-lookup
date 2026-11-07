@@ -44,4 +44,5 @@ async def async_get_config_entry_diagnostics(
                 "permissions": sorted(data.user.permissions),
             },
         },
+        "index": data.coordinator.diagnostics(),
     }

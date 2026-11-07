@@ -52,6 +52,17 @@ async def test_diagnostics_redacted(
     assert diagnostics["paperless"]["api_version"] == 10
     assert diagnostics["paperless"]["user"]["has_write_access"] is False
     assert diagnostics["paperless"]["user"]["missing_permissions"] == []
+    assert diagnostics["index"] == {
+        "last_update_success": True,
+        "documents": 7,
+        "documents_per_category": {"1": 4, "2": 3},
+        "documents_with_models": 4,
+        "devices_with_links": 0,
+        "devices_with_unlinks": 0,
+        "ignored_devices": 0,
+    }
+    for title in ("receipt", "manual", "Washing"):
+        assert title not in text
 
 
 def _keys(data: Any, prefix: str = "") -> set[str]:

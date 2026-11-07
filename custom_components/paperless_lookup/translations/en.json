@@ -144,6 +144,9 @@
     },
     "cannot_connect": {
       "message": "Failed to connect to Paperless."
+    },
+    "update_failed": {
+      "message": "Failed to read the documents from Paperless."
     }
   }
 }

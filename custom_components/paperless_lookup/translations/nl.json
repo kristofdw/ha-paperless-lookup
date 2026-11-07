@@ -144,6 +144,9 @@
     },
     "cannot_connect": {
       "message": "Kan geen verbinding maken met Paperless."
+    },
+    "update_failed": {
+      "message": "Kan de documenten niet uit Paperless ophalen."
     }
   }
 }

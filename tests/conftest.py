@@ -91,6 +91,20 @@ def mock_paperless(
             aioclient_mock.get(f"{base}/api/{endpoint}/", status=value, json={}, headers=headers)
         else:
             aioclient_mock.get(f"{base}/api/{endpoint}/", json=value, headers=headers)
+    # Documents: the two captured pages (9 documents with the HA tag), or one override page.
+    documents = overrides.get("documents")
+    if isinstance(documents, HTTPStatus):
+        aioclient_mock.get(f"{base}/api/documents/", status=documents, json={}, headers=headers)
+    elif documents is not None:
+        aioclient_mock.get(f"{base}/api/documents/", json=documents, headers=headers)
+    else:
+        for page in (1, 2):
+            aioclient_mock.get(
+                f"{base}/api/documents/",
+                params={"page": str(page)},
+                json=load_json_fixture(f"documents_page_{page}"),
+                headers=headers,
+            )
 
 
 @pytest.fixture(autouse=True)

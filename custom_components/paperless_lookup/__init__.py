@@ -4,8 +4,9 @@ from dataclasses import dataclass
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 
 from .api import (
     PaperlessAuthError,
@@ -16,7 +17,9 @@ from .api import (
     PaperlessUser,
 )
 from .const import CONF_PAPERLESS_USER_ID, DOMAIN
+from .coordinator import PaperlessLookupCoordinator
 from .helpers import create_client, missing_permissions
+from .store import LinkStore
 
 PLATFORMS: list[Platform] = []
 
@@ -27,6 +30,8 @@ class PaperlessLookupData:
 
     client: PaperlessClient
     user: PaperlessUser
+    coordinator: PaperlessLookupCoordinator
+    store: LinkStore
 
 
 type PaperlessLookupConfigEntry = ConfigEntry[PaperlessLookupData]
@@ -66,7 +71,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: PaperlessLookupConfigEnt
             translation_placeholders={"permissions": ", ".join(missing)},
         )
 
-    entry.runtime_data = PaperlessLookupData(client=client, user=user)
+    store = LinkStore(hass, entry.entry_id)
+    await store.async_load()
+    coordinator = PaperlessLookupCoordinator(hass, entry, client, store)
+    await coordinator.async_config_entry_first_refresh()
+    # The coordinator only refreshes periodically while it has listeners; the index is used by
+    # the websocket API and the panel, not by entities, so keep one listener for the lifetime.
+    entry.async_on_unload(coordinator.async_add_listener(lambda: None))
+
+    entry.runtime_data = PaperlessLookupData(
+        client=client, user=user, coordinator=coordinator, store=store
+    )
+
+    @callback
+    def _device_removed(event: Event[dr.EventDeviceRegistryUpdatedData]) -> None:
+        """Forget the manual links of a removed device."""
+        if event.data["action"] == "remove":
+            entry.async_create_background_task(
+                hass,
+                store.async_remove_device(event.data["device_id"]),
+                "paperless_lookup_remove_device_links",
+            )
+
+    entry.async_on_unload(hass.bus.async_listen(dr.EVENT_DEVICE_REGISTRY_UPDATED, _device_removed))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
@@ -74,3 +101,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PaperlessLookupConfigEnt
 async def async_unload_entry(hass: HomeAssistant, entry: PaperlessLookupConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: PaperlessLookupConfigEntry) -> None:
+    """Delete the stored links when the config entry is removed."""
+    await LinkStore(hass, entry.entry_id).async_remove()

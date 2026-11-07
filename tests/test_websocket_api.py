@@ -13,7 +13,7 @@ from pytest_homeassistant_custom_component.typing import WebSocketGenerator
 from custom_components.paperless_lookup.const import CONF_ACCESS_TAG, CONF_ADMINS_ALWAYS
 from custom_components.paperless_lookup.websocket_api import async_register, highlight_segments
 
-from .conftest import TEST_URL, load_json_fixture
+from .conftest import TEST_URL, load_json_fixture, mock_paperless
 from .security import (
     AQARA_DOC,
     INVOICE_DOC,
@@ -190,6 +190,52 @@ async def test_search(
     assert query["document_type__id__in"] == "1,2,3,4,5"
     assert query["correspondent__id__in"] == "4"
     assert query["created__gte"] == "2025-01-01"
+
+
+async def test_search_refreshes_index_for_new_documents(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    setup: MockConfigEntry,
+    users: Users,
+) -> None:
+    """Test that a result missing from the index (new in Paperless) refreshes the index."""
+    new_doc = {
+        "id": 20,
+        "title": "Coffee machine receipt",
+        "document_type": RECEIPT,
+        "correspondent": 6,
+        "created": "2026-11-07",
+        "tags": [1],
+        "custom_fields": [],
+        "mime_type": "application/pdf",
+    }
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        f"{TEST_URL}/api/documents/",
+        params={"text": "coffee"},
+        json={"count": 1, "next": None, "results": [new_doc]},
+    )
+    documents = [
+        *load_json_fixture("documents_page_1")["results"],
+        *load_json_fixture("documents_page_2")["results"],
+        new_doc,
+    ]
+    mock_paperless(
+        aioclient_mock, documents={"count": len(documents), "next": None, "results": documents}
+    )
+    sign = {"type": "paperless_lookup/sign_documents", "document_ids": [20], "kind": "thumb"}
+    before = await call(hass, hass_ws_client, users.reader, **sign)
+    assert before["result"]["paths"] == {}
+
+    response = await call(
+        hass, hass_ws_client, users.reader, type="paperless_lookup/search", query="coffee"
+    )
+
+    assert ids(response["result"]["results"]) == [20]
+    assert response["result"]["results"][0]["correspondent_name"] == "Sample Supermarket"
+    after = await call(hass, hass_ws_client, users.reader, **sign)
+    assert set(after["result"]["paths"]) == {"20"}
 
 
 async def test_search_restricted_to_allowed_categories(

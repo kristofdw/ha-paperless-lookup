@@ -271,6 +271,10 @@ async def ws_search(
         page=msg["page"],
         page_size=msg["page_size"],
     )
+    if any(hit.document.id not in coordinator.data.documents for hit in result.hits):
+        # New in Paperless since the last refresh: update the index now, so thumbnails, previews
+        # and links of these results work right away (the coordinator debounces refreshes).
+        await coordinator.async_request_refresh()
     index = coordinator.data
     results = []
     for hit in result.hits:

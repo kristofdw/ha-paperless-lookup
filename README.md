@@ -25,10 +25,12 @@ documents searchable in [Home Assistant](https://www.home-assistant.io/):
 5. [Choose who sees what (options)](#4-choose-who-sees-what-options)
 6. [Use it](#5-use-it)
 7. [Link manuals to devices](#6-link-manuals-to-devices)
-8. [Security model](#security-model)
-9. [Troubleshooting](#troubleshooting)
-10. [Update and remove](#update-and-remove)
-11. [Development](#development)
+8. [How data is updated](#how-data-is-updated)
+9. [Security model](#security-model)
+10. [Known limitations](#known-limitations)
+11. [Troubleshooting](#troubleshooting)
+12. [Update and remove](#update-and-remove)
+13. [Development](#development)
 
 ## Requirements
 
@@ -176,9 +178,6 @@ in the lists comes live from Paperless.
   - *Model field*: the text custom field with the models (`HA model`).
   - *Zigbee2MQTT link as fallback*: for a Zigbee2MQTT device without manual, link to its page on
     zigbee2mqtt.io.
-- **Refresh interval**: how often the list of released documents is reloaded (5 to 1440 minutes).
-  Search always asks Paperless directly, and a new document that a search finds is added to the list at
-  once. The interval matters for the filter lists, the device links and *Devices without manual*.
 
 The integration reloads after every change.
 
@@ -255,6 +254,14 @@ document of a device category. Per device you can:
 
 Removing an automatic link (✕ on the card) is remembered: the document stays unlinked from that device.
 
+## How data is updated
+
+- **Search** always asks Paperless directly, and a new document that a search finds is added to the list
+  at once.
+- **Files** are fetched from Paperless when someone opens them; Home Assistant keeps no copy.
+- **The list of released documents** (filter lists, device links, *Devices without manual*) is read from
+  Paperless every 60 minutes. To update it sooner, reload the integration (*⋮ → Reload*).
+
 ## Security model
 
 - **Opt-in in Paperless**: only documents with the access tag in an enabled category are reachable.
@@ -274,6 +281,23 @@ Removing an automatic link (✕ on the card) is remembered: the document stays u
 - **Read-only**: the integration never changes anything in Paperless. Paperless' audit log records
   changes, not reads; to follow what Home Assistant reads, use the web server or reverse proxy logs of
   Paperless.
+
+## Known limitations
+
+- **One Paperless connection**, through one Paperless user.
+- **Read-only**: documents, tags and notes cannot be changed from Home Assistant.
+- **No entities or actions**: the integration offers a panel and a card, so there is nothing to use in
+  automations.
+- **No access rights per sidebar item in Home Assistant**: *Users who see Paperless Lookup in the sidebar*
+  only hides the menu item. Access to documents is set per category.
+- **Administrators see every category** while *Administrators see all categories* is on, so don't use an
+  administrator account on a shared device such as a wall tablet.
+- **File types**: only PDF, common image types and plain text can be opened. An Office document can be
+  opened only when Paperless has a PDF version of it.
+- **File size**: at most 100 MiB per document and 5 MiB per thumbnail.
+- **Search** matches whole words. The advanced query syntax of Paperless is not supported.
+- **Child devices** are not linked to manuals. Models of fewer than three characters are ignored.
+- **Android**: the Companion app cannot show PDF files inline (see [the panel](#the-sidebar-panel)).
 
 ## Troubleshooting
 
@@ -295,7 +319,15 @@ Removing an automatic link (✕ on the card) is remembered: the document stays u
 3. Can the Paperless user see them? Log in to Paperless as that user (step 1.4, object permissions).
    A tag or document type it cannot see does not appear in the options lists either.
 4. New or changed documents appear in search right away. For device links and the filter lists, wait
-   for the refresh interval or reload the integration (*⋮ → Reload*).
+   for the next refresh (at most 60 minutes) or reload the integration (*⋮ → Reload*).
+
+**Messages under *Settings → System → Repairs***
+
+| Message | Cause and fix |
+|---|---|
+| Paperless-ngx version not supported | Update Paperless-ngx to 3.0.0 or newer, then reload the integration. |
+| Paperless user lacks permissions | Give the user the listed view permissions (step 1.4), then reload the integration. |
+| Paperless access tag not available | No tag is chosen, or the Paperless user cannot see it, so no documents are visible. Create or share the tag (steps 1.1 and 1.4), or choose another one in the options. |
 
 **A manual does not appear on a device**: compare the `HA model` value with the model and model ID on the
 device page (section 6), and check that its document type is a device category. You can always link it

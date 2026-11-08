@@ -1,0 +1,119 @@
+# Self-assessment against the Home Assistant Integration Quality Scale.
+# Home Assistant does not review custom integrations, so this is not an official tier.
+# Documentation rules are applied to the README, the integration's only documentation page.
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: The integration provides no actions.
+  appropriate-polling: done
+  brands:
+    status: exempt
+    comment: The brands repository rule targets core integrations; the icons ship in brand/.
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: The integration provides no actions.
+  docs-conditions:
+    status: exempt
+    comment: The integration provides no conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: The integration provides no triggers.
+  entity-event-setup:
+    status: exempt
+    comment: The integration creates no entities.
+  entity-unique-id:
+    status: exempt
+    comment: The integration creates no entities.
+  has-entity-name:
+    status: exempt
+    comment: The integration creates no entities.
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: The integration provides no actions.
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable:
+    status: exempt
+    comment: The integration creates no entities.
+  integration-owner: done
+  log-when-unavailable:
+    status: exempt
+    comment: The integration creates no entities; the coordinator still logs an outage once.
+  parallel-updates:
+    status: exempt
+    comment: The integration has no entity platforms.
+  reauthentication-flow: done
+  test-coverage: done
+
+  # Gold
+  devices:
+    status: exempt
+    comment: The integration is a service and creates no devices.
+  diagnostics: done
+  discovery:
+    status: exempt
+    comment: Paperless-ngx cannot be discovered on the network.
+  discovery-update-info:
+    status: exempt
+    comment: Paperless-ngx cannot be discovered on the network.
+  docs-data-update: done
+  docs-examples:
+    status: exempt
+    comment: The integration creates no entities and provides no actions.
+  docs-known-limitations: done
+  docs-supported-devices:
+    status: exempt
+    comment: The integration does not integrate physical devices.
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: The integration creates no devices.
+  entity-category:
+    status: exempt
+    comment: The integration creates no entities.
+  entity-device-class:
+    status: exempt
+    comment: The integration creates no entities.
+  entity-disabled-by-default:
+    status: exempt
+    comment: The integration creates no entities.
+  entity-translations:
+    status: exempt
+    comment: The integration creates no entities.
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: The integration creates no entities and provides no actions.
+  reconfiguration-flow: done
+  repair-issues: done
+  stale-devices:
+    status: exempt
+    comment: The integration creates no devices.
+
+  # Platinum
+  async-dependency:
+    status: done
+    comment: No external library; the client in api.py uses aiohttp.
+  inject-websession:
+    status: done
+    comment: The client in api.py receives the session of Home Assistant.
+  strict-typing:
+    status: done
+    comment: Checked with mypy in strict mode in CI.

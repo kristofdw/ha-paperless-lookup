@@ -41,7 +41,9 @@ and access is granted per category (Paperless document type) per Home Assistant 
 ## Conventions
 - Code, docstrings, README, commit messages and this file in **English**.
 - Follow the Home Assistant custom integration guidelines and the Integration Quality Scale (Silver or
-  better): `runtime_data`, `has_entity_name`, config flow tests, reauth, reconfigure, diagnostics.
+  better): `runtime_data`, config flow tests, reauth, reconfigure, diagnostics, repair issues. Keep the
+  self-assessment in `custom_components/paperless_lookup/quality_scale.yaml` up to date; hassfest does not
+  check it for custom integrations, and no tier is claimed in `manifest.json`.
 - No extra Python dependencies. Use `async_get_clientsession` for HTTP.
 - Keep project instructions in this file. Do not add agent-specific instruction files.
 

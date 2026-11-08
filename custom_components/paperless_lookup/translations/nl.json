@@ -73,8 +73,7 @@
         "menu_options": {
           "access": "Toegangstag en zichtbaarheid",
           "categories": "Categorieën en gebruikers",
-          "devices": "Toestellen",
-          "general": "Verversinterval"
+          "devices": "Toestellen"
         }
       },
       "access": {
@@ -96,6 +95,9 @@
         "description": "Een categorie is een documenttype in Paperless. Documenten van andere types, of zonder type, zijn niet zichtbaar.",
         "data": {
           "categories": "Categorieën"
+        },
+        "data_description": {
+          "categories": "Alleen documenten van de gekozen documenttypes kunnen in Home Assistant getoond worden."
         }
       },
       "category_users": {
@@ -114,15 +116,6 @@
           "device_categories": "Alleen de categorieën die je onder Categorieën koos, staan in de lijst.",
           "model_field": "Custom field (tekst) in Paperless met de toestelmodellen.",
           "zigbee2mqtt_fallback": "Link naar de toestelpagina van Zigbee2MQTT als een Zigbee-toestel geen handleiding heeft."
-        }
-      },
-      "general": {
-        "title": "Verversinterval",
-        "data": {
-          "refresh_interval": "Verversinterval"
-        },
-        "data_description": {
-          "refresh_interval": "Hoe vaak de lijst met documenten opnieuw uit Paperless wordt geladen."
         }
       }
     },
@@ -149,6 +142,20 @@
     },
     "update_failed": {
       "message": "Kan de documenten niet uit Paperless ophalen."
+    }
+  },
+  "issues": {
+    "unsupported_version": {
+      "title": "Paperless-ngx-versie niet ondersteund",
+      "description": "Paperless Lookup heeft Paperless-ngx 3.0 of nieuwer nodig, dus de integratie kon niet starten. Werk Paperless-ngx bij en herlaad daarna de integratie."
+    },
+    "missing_permission": {
+      "title": "Paperless-gebruiker mist rechten",
+      "description": "De Paperless-gebruiker die Home Assistant gebruikt, mist deze rechten: {permissions}. De integratie kon niet starten. Geef de gebruiker deze leesrechten in Paperless onder Gebruikers & groepen en herlaad daarna de integratie."
+    },
+    "access_tag_missing": {
+      "title": "Paperless-toegangstag niet beschikbaar",
+      "description": "Er zijn geen documenten zichtbaar in Home Assistant: er is geen toegangstag gekozen, of de Paperless-gebruiker kan de tag niet zien. Maak de tag aan in Paperless of deel hem met die gebruiker. Of kies een andere onder Instellingen > Apparaten & diensten > Paperless Lookup > Configureren > Toegangstag en zichtbaarheid. Deze melding verdwijnt bij de volgende verversing of als je de integratie herlaadt."
     }
   }
 }

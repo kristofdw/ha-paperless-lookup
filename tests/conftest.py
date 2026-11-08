@@ -18,7 +18,6 @@ from custom_components.paperless_lookup.const import (
     CONF_MODEL_FIELD,
     CONF_PANEL_USERS,
     CONF_PAPERLESS_USER_ID,
-    CONF_REFRESH_INTERVAL,
     CONF_ZIGBEE2MQTT_FALLBACK,
     DOMAIN,
 )
@@ -47,7 +46,6 @@ DEFAULT_OPTIONS: dict[str, Any] = {
     CONF_DEVICE_CATEGORIES: [1],
     CONF_MODEL_FIELD: 1,
     CONF_ZIGBEE2MQTT_FALLBACK: False,
-    CONF_REFRESH_INTERVAL: 60,
 }
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -119,6 +117,7 @@ def mock_config_entry() -> MockConfigEntry:
     """Return a config entry for Paperless Lookup."""
     return MockConfigEntry(
         domain=DOMAIN,
+        minor_version=2,
         title=PAPERLESS_USERNAME,
         unique_id=f"{TEST_URL}#{PAPERLESS_USER_ID}",
         data=dict(MOCK_CONFIG),

@@ -22,6 +22,13 @@ from .api import (
 from .const import CONF_PANEL_USERS, CONF_PAPERLESS_USER_ID, DOMAIN
 from .coordinator import PaperlessLookupCoordinator
 from .helpers import create_client, missing_permissions
+from .issues import (
+    ISSUE_MISSING_PERMISSION,
+    ISSUE_UNSUPPORTED_VERSION,
+    async_clear_all_issues,
+    async_clear_issue,
+    async_raise_issue,
+)
 from .panel import (
     async_register_frontend,
     async_register_panel,
@@ -35,6 +42,7 @@ from .websocket_api import async_register as async_register_websocket_api
 PLATFORMS: list[Platform] = []
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 DATA_MODULE_URL: HassKey[str] = HassKey(f"{DOMAIN}_module_url")
+_LEGACY_REFRESH_INTERVAL = "refresh_interval"  # Option removed in config entry version 1.2.
 
 
 @dataclass(slots=True)
@@ -58,6 +66,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+async def async_migrate_entry(hass: HomeAssistant, entry: PaperlessLookupConfigEntry) -> bool:
+    """Migrate an older config entry (Home Assistant refuses newer major versions itself)."""
+    if entry.minor_version < 2:
+        options = {
+            key: value for key, value in entry.options.items() if key != _LEGACY_REFRESH_INTERVAL
+        }
+        hass.config_entries.async_update_entry(entry, options=options, minor_version=2)
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: PaperlessLookupConfigEntry) -> bool:
     """Set up Paperless Lookup from a config entry."""
     client = create_client(hass, entry.data)
@@ -68,10 +86,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: PaperlessLookupConfigEnt
             translation_domain=DOMAIN, translation_key="invalid_auth"
         ) from err
     except PaperlessUnsupportedVersionError as err:
+        async_raise_issue(hass, entry.entry_id, ISSUE_UNSUPPORTED_VERSION)
         raise ConfigEntryError(
             translation_domain=DOMAIN, translation_key="unsupported_version"
         ) from err
     except PaperlessPermissionError as err:
+        async_raise_issue(
+            hass,
+            entry.entry_id,
+            ISSUE_MISSING_PERMISSION,
+            placeholders={"permissions": "view_uisettings"},
+        )
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="missing_permission",
@@ -82,15 +107,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: PaperlessLookupConfigEnt
             translation_domain=DOMAIN, translation_key="cannot_connect"
         ) from err
 
+    async_clear_issue(hass, entry.entry_id, ISSUE_UNSUPPORTED_VERSION)
     if user.id != entry.data[CONF_PAPERLESS_USER_ID]:
         # The token now belongs to another Paperless user: ask for the right one.
         raise ConfigEntryAuthFailed(translation_domain=DOMAIN, translation_key="wrong_account")
     if missing := missing_permissions(user):
+        permissions = ", ".join(missing)
+        async_raise_issue(
+            hass,
+            entry.entry_id,
+            ISSUE_MISSING_PERMISSION,
+            placeholders={"permissions": permissions},
+        )
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="missing_permission",
-            translation_placeholders={"permissions": ", ".join(missing)},
+            translation_placeholders={"permissions": permissions},
         )
+    async_clear_issue(hass, entry.entry_id, ISSUE_MISSING_PERMISSION)
 
     store = LinkStore(hass, entry.entry_id)
     await store.async_load()
@@ -141,7 +175,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: PaperlessLookupConfigEn
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: PaperlessLookupConfigEntry) -> None:
-    """Show the sidebar item again where it was hidden and delete the stored links."""
+    """Show the sidebar item again where it was hidden and delete what the entry stored."""
+    async_clear_all_issues(hass, entry.entry_id)
     store = LinkStore(hass, entry.entry_id)
     await store.async_load()
     await async_sync_panel_visibility(hass, store, [])

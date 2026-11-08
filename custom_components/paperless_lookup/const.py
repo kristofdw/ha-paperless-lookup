@@ -1,5 +1,6 @@
 """Constants for the Paperless Lookup integration."""
 
+from datetime import timedelta
 from typing import Final
 
 DOMAIN: Final = "paperless_lookup"
@@ -18,7 +19,6 @@ CONF_PANEL_USERS: Final = "panel_users"
 CONF_DEVICE_CATEGORIES: Final = "device_categories"  # Document type ids (subset of categories).
 CONF_MODEL_FIELD: Final = "model_field"  # Paperless custom field id, or None.
 CONF_ZIGBEE2MQTT_FALLBACK: Final = "zigbee2mqtt_fallback"
-CONF_REFRESH_INTERVAL: Final = "refresh_interval"  # Minutes.
 
 # Defaults, matched case-insensitively against the names in Paperless when the entry is created.
 DEFAULT_ACCESS_TAG_NAME: Final = "HA"
@@ -28,9 +28,9 @@ DEFAULT_DEVICE_CATEGORY_NAMES: Final = frozenset(
 DEFAULT_MODEL_FIELD_NAME: Final = "HA model"
 DEFAULT_ADMINS_ALWAYS: Final = True
 DEFAULT_ZIGBEE2MQTT_FALLBACK: Final = False
-DEFAULT_REFRESH_INTERVAL: Final = 60
-MIN_REFRESH_INTERVAL: Final = 5
-MAX_REFRESH_INTERVAL: Final = 1440
+
+# Search always asks Paperless directly; the index only feeds filter lists and device links.
+REFRESH_INTERVAL: Final = timedelta(minutes=60)
 
 # Paperless model permissions the integration needs (it never writes).
 REQUIRED_PERMISSIONS: Final = (

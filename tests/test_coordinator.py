@@ -7,7 +7,7 @@ from typing import Any
 from freezegun.api import FrozenDateTimeFactory
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant_custom_component.test_util.aiohttp import AiohttpClientMocker
@@ -18,8 +18,8 @@ from custom_components.paperless_lookup.const import (
     CONF_CATEGORIES,
     CONF_DEVICE_CATEGORIES,
     CONF_MODEL_FIELD,
-    CONF_REFRESH_INTERVAL,
     DOMAIN,
+    REFRESH_INTERVAL,
 )
 from custom_components.paperless_lookup.coordinator import (
     PaperlessLookupCoordinator,
@@ -183,6 +183,55 @@ async def test_index_without_tag_or_categories(
     assert coordinator.devices_without_documents() == []
 
 
+async def test_access_tag_issue_follows_the_tag(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a tag Paperless no longer shows empties the index and raises a repair issue."""
+    registry = ir.async_get(hass)
+    issue_id = f"access_tag_missing_{mock_config_entry.entry_id}"
+    coordinator = await setup_entry(hass, aioclient_mock, mock_config_entry)
+    assert coordinator.diagnostics()["access_tag_visible"] is True
+    assert registry.async_get_issue(DOMAIN, issue_id) is None
+
+    async def refresh(tags: Any) -> None:
+        aioclient_mock.clear_requests()
+        mock_paperless(aioclient_mock, tags=tags)
+        freezer.tick(REFRESH_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    await refresh({"count": 0, "next": None, "previous": None, "all": [], "results": []})
+    assert coordinator.diagnostics()["access_tag_visible"] is False
+    assert len(coordinator.data.documents) == 0
+    assert not any("/api/documents/" in str(call[1]) for call in aioclient_mock.mock_calls)
+    issue = registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.severity is ir.IssueSeverity.WARNING
+    assert issue.translation_key == "access_tag_missing"
+
+    await refresh(load_json_fixture("tags"))
+    assert len(coordinator.data.documents) == 9
+    assert registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_no_access_tag_raises_issue_and_removal_clears_it(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the issue for an unset tag; removing the entry deletes it."""
+    registry = ir.async_get(hass)
+    issue_id = f"access_tag_missing_{mock_config_entry.entry_id}"
+    await setup_entry(hass, aioclient_mock, mock_config_entry, {CONF_ACCESS_TAG: None})
+    assert registry.async_get_issue(DOMAIN, issue_id) is not None
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert registry.async_get_issue(DOMAIN, issue_id) is None
+
+
 async def test_index_without_model_field(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -214,14 +263,12 @@ async def test_refresh_errors(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the periodic refresh: interval, failure, then a rejected token (reauth)."""
-    coordinator = await setup_entry(
-        hass, aioclient_mock, mock_config_entry, {CONF_REFRESH_INTERVAL: 15}
-    )
-    assert coordinator.update_interval == timedelta(minutes=15)
+    coordinator = await setup_entry(hass, aioclient_mock, mock_config_entry)
+    assert coordinator.update_interval == timedelta(minutes=60) == REFRESH_INTERVAL
 
     aioclient_mock.clear_requests()
     mock_paperless(aioclient_mock, documents=HTTPStatus.BAD_GATEWAY)
-    freezer.tick(timedelta(minutes=15))
+    freezer.tick(REFRESH_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert not coordinator.last_update_success
@@ -229,7 +276,7 @@ async def test_refresh_errors(
 
     aioclient_mock.clear_requests()
     mock_paperless(aioclient_mock, document_types=HTTPStatus.UNAUTHORIZED)
-    freezer.tick(timedelta(minutes=15))
+    freezer.tick(REFRESH_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)

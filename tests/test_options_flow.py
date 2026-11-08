@@ -17,7 +17,6 @@ from custom_components.paperless_lookup.const import (
     CONF_DEVICE_CATEGORIES,
     CONF_MODEL_FIELD,
     CONF_PANEL_USERS,
-    CONF_REFRESH_INTERVAL,
     CONF_ZIGBEE2MQTT_FALLBACK,
 )
 
@@ -40,7 +39,7 @@ async def open_step(hass: HomeAssistant, entry: MockConfigEntry, step: str) -> C
     """Open the options menu and choose a step."""
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["type"] is FlowResultType.MENU
-    assert result["menu_options"] == ["access", "categories", "devices", "general"]
+    assert result["menu_options"] == ["access", "categories", "devices"]
     return await hass.config_entries.options.async_configure(
         result["flow_id"], {"next_step_id": step}
     )
@@ -278,18 +277,6 @@ async def test_devices_only_string_fields(
         result["flow_id"], {CONF_ZIGBEE2MQTT_FALLBACK: False}
     )
     assert loaded_entry.options[CONF_MODEL_FIELD] is None
-
-
-async def test_general(hass: HomeAssistant, loaded_entry: MockConfigEntry) -> None:
-    """Test the refresh interval."""
-    result = await open_step(hass, loaded_entry, "general")
-    assert suggested(result) == {CONF_REFRESH_INTERVAL: 60}
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {CONF_REFRESH_INTERVAL: 15.0}
-    )
-
-    assert loaded_entry.options[CONF_REFRESH_INTERVAL] == 15
 
 
 @pytest.mark.parametrize(

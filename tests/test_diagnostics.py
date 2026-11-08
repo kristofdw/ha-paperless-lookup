@@ -62,6 +62,7 @@ async def test_diagnostics_redacted(
     assert diagnostics["paperless"]["user"]["missing_permissions"] == []
     assert diagnostics["index"] == {
         "last_update_success": True,
+        "access_tag_visible": True,
         "document_types_visible": 5,
         "correspondents_visible": 7,
         "documents": 7,

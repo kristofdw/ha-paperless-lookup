@@ -292,6 +292,7 @@ async def test_search_restricted_to_allowed_categories(
         ("nobody", {}, {}),
         ("guest", {"categories": [RECEIPT]}, {}),
         ("admin", {}, {CONF_ACCESS_TAG: None}),
+        ("admin", {}, {CONF_ACCESS_TAG: 77}),  # a tag Paperless does not show
         ("admin", {}, {CONF_ADMINS_ALWAYS: False}),
     ],
 )

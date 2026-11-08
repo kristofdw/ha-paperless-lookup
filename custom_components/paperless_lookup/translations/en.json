@@ -73,8 +73,7 @@
         "menu_options": {
           "access": "Access tag and visibility",
           "categories": "Categories and users",
-          "devices": "Devices",
-          "general": "Refresh interval"
+          "devices": "Devices"
         }
       },
       "access": {
@@ -96,6 +95,9 @@
         "description": "A category is a Paperless document type. Documents of other types, or without a type, are not visible.",
         "data": {
           "categories": "Categories"
+        },
+        "data_description": {
+          "categories": "Only documents of the chosen document types can be shown in Home Assistant."
         }
       },
       "category_users": {
@@ -114,15 +116,6 @@
           "device_categories": "Only categories chosen under Categories are listed.",
           "model_field": "Paperless custom field (text) with the device models.",
           "zigbee2mqtt_fallback": "Link to the Zigbee2MQTT device page when a Zigbee device has no manual."
-        }
-      },
-      "general": {
-        "title": "Refresh interval",
-        "data": {
-          "refresh_interval": "Refresh interval"
-        },
-        "data_description": {
-          "refresh_interval": "How often the list of documents is reloaded from Paperless."
         }
       }
     },
@@ -149,6 +142,20 @@
     },
     "update_failed": {
       "message": "Failed to read the documents from Paperless."
+    }
+  },
+  "issues": {
+    "unsupported_version": {
+      "title": "Paperless-ngx version not supported",
+      "description": "Paperless Lookup needs Paperless-ngx 3.0 or newer, so the integration could not start. Update Paperless-ngx, then reload the integration."
+    },
+    "missing_permission": {
+      "title": "Paperless user lacks permissions",
+      "description": "The Paperless user that Home Assistant uses lacks these permissions: {permissions}. The integration could not start. Give the user these view permissions in Paperless under Users & Groups, then reload the integration."
+    },
+    "access_tag_missing": {
+      "title": "Paperless access tag not available",
+      "description": "No documents are visible in Home Assistant: no access tag is chosen, or the Paperless user cannot see it. In Paperless, create the tag or share it with that user. Or choose another one under Settings > Devices & services > Paperless Lookup > Configure > Access tag and visibility. This message disappears at the next refresh, or when you reload the integration."
     }
   }
 }

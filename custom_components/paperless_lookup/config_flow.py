@@ -19,9 +19,6 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.selector import (
     BooleanSelector,
-    NumberSelector,
-    NumberSelectorConfig,
-    NumberSelectorMode,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
@@ -52,14 +49,10 @@ from .const import (
     CONF_MODEL_FIELD,
     CONF_PANEL_USERS,
     CONF_PAPERLESS_USER_ID,
-    CONF_REFRESH_INTERVAL,
     CONF_ZIGBEE2MQTT_FALLBACK,
     DEFAULT_ADMINS_ALWAYS,
-    DEFAULT_REFRESH_INTERVAL,
     DEFAULT_ZIGBEE2MQTT_FALLBACK,
     DOMAIN,
-    MAX_REFRESH_INTERVAL,
-    MIN_REFRESH_INTERVAL,
 )
 from .helpers import (
     async_default_options,
@@ -94,6 +87,7 @@ class PaperlessLookupConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Paperless Lookup."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize the flow."""
@@ -291,7 +285,7 @@ class PaperlessLookupConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class PaperlessLookupOptionsFlow(OptionsFlowWithReload):
-    """Options: access tag, categories and users, devices, refresh interval."""
+    """Options: access tag, categories and users, devices."""
 
     def __init__(self) -> None:
         """Initialize the options flow."""
@@ -309,7 +303,7 @@ class PaperlessLookupOptionsFlow(OptionsFlowWithReload):
         if self.config_entry.state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="not_loaded")
         return self.async_show_menu(
-            step_id="init", menu_options=["access", "categories", "devices", "general"]
+            step_id="init", menu_options=["access", "categories", "devices"]
         )
 
     async def async_step_access(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
@@ -450,34 +444,6 @@ class PaperlessLookupOptionsFlow(OptionsFlowWithReload):
             suggested[CONF_MODEL_FIELD] = str(options[CONF_MODEL_FIELD])
         return self.async_show_form(
             step_id="devices", data_schema=self.add_suggested_values_to_schema(schema, suggested)
-        )
-
-    async def async_step_general(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Choose the refresh interval."""
-        if user_input is not None:
-            return self._async_save({CONF_REFRESH_INTERVAL: int(user_input[CONF_REFRESH_INTERVAL])})
-        schema = probatio.Schema(
-            {
-                probatio.Required(CONF_REFRESH_INTERVAL): NumberSelector(
-                    NumberSelectorConfig(
-                        min=MIN_REFRESH_INTERVAL,
-                        max=MAX_REFRESH_INTERVAL,
-                        step=1,
-                        unit_of_measurement="min",
-                        mode=NumberSelectorMode.BOX,
-                    )
-                )
-            }
-        )
-        suggested = {
-            CONF_REFRESH_INTERVAL: self.config_entry.options.get(
-                CONF_REFRESH_INTERVAL, DEFAULT_REFRESH_INTERVAL
-            )
-        }
-        return self.async_show_form(
-            step_id="general", data_schema=self.add_suggested_values_to_schema(schema, suggested)
         )
 
     async def _async_user_selector(self) -> tuple[SelectSelector, set[str]]:

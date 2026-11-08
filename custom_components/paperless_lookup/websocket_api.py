@@ -261,7 +261,7 @@ async def ws_search(
     categories = access.categories
     if "categories" in msg:
         categories = categories & set(msg["categories"])
-    if coordinator.access_tag is None or not categories:
+    if coordinator.access_tag is None or not coordinator.data.access_tag_visible or not categories:
         connection.send_result(msg["id"], {"count": 0, "results": []})
         return
     created_from: date | None = msg.get("date_from")

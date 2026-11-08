@@ -1,13 +1,13 @@
 """Index of the documents released to Home Assistant, and their links to devices."""
 
 from dataclasses import dataclass, field
-from datetime import date, timedelta
+from datetime import date
 import logging
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import PaperlessAuthError, PaperlessClient, PaperlessDocument, PaperlessError
@@ -16,10 +16,10 @@ from .const import (
     CONF_CATEGORIES,
     CONF_DEVICE_CATEGORIES,
     CONF_MODEL_FIELD,
-    CONF_REFRESH_INTERVAL,
-    DEFAULT_REFRESH_INTERVAL,
     DOMAIN,
+    REFRESH_INTERVAL,
 )
+from .issues import ISSUE_ACCESS_TAG_MISSING, async_clear_issue, async_raise_issue
 from .matching import DeviceInfo, matches, model_keys as build_model_keys, split_models
 from .store import LinkStore
 
@@ -52,6 +52,8 @@ class DocumentIndex:
     documents: dict[int, IndexedDocument] = field(default_factory=dict)
     document_types: dict[int, str] = field(default_factory=dict)
     correspondents: dict[int, str] = field(default_factory=dict)
+    # False when no tag is chosen or Paperless no longer shows it: nothing is visible then.
+    access_tag_visible: bool = False
 
 
 class PaperlessLookupCoordinator(DataUpdateCoordinator[DocumentIndex]):
@@ -73,9 +75,7 @@ class PaperlessLookupCoordinator(DataUpdateCoordinator[DocumentIndex]):
             _LOGGER,
             config_entry=entry,
             name=DOMAIN,
-            update_interval=timedelta(
-                minutes=int(options.get(CONF_REFRESH_INTERVAL, DEFAULT_REFRESH_INTERVAL))
-            ),
+            update_interval=REFRESH_INTERVAL,
         )
         self.client = client
         self.store = store
@@ -96,11 +96,12 @@ class PaperlessLookupCoordinator(DataUpdateCoordinator[DocumentIndex]):
         try:
             document_types = await self.client.async_get_document_types()
             correspondents = await self.client.async_get_correspondents()
+            access_tag_visible = await self._async_access_tag_visible()
             documents = (
                 await self.client.async_get_documents(
                     access_tag_id=self.access_tag, document_type_ids=self.categories
                 )
-                if self.access_tag is not None and self.categories
+                if self.access_tag is not None and access_tag_visible and self.categories
                 else []
             )
         except PaperlessAuthError as err:
@@ -109,6 +110,13 @@ class PaperlessLookupCoordinator(DataUpdateCoordinator[DocumentIndex]):
             ) from err
         except PaperlessError as err:
             raise UpdateFailed(translation_domain=DOMAIN, translation_key="update_failed") from err
+        entry_id = self.config_entry.entry_id
+        if access_tag_visible:
+            async_clear_issue(self.hass, entry_id, ISSUE_ACCESS_TAG_MISSING)
+        else:
+            async_raise_issue(
+                self.hass, entry_id, ISSUE_ACCESS_TAG_MISSING, severity=ir.IssueSeverity.WARNING
+            )
         return DocumentIndex(
             documents={
                 doc.id: indexed
@@ -117,7 +125,14 @@ class PaperlessLookupCoordinator(DataUpdateCoordinator[DocumentIndex]):
             },
             document_types={obj.id: obj.name for obj in document_types},
             correspondents={obj.id: obj.name for obj in correspondents},
+            access_tag_visible=access_tag_visible,
         )
+
+    async def _async_access_tag_visible(self) -> bool:
+        """Return whether the chosen access tag exists for the Paperless user."""
+        if self.access_tag is None:
+            return False
+        return any(tag.id == self.access_tag for tag in await self.client.async_get_tags())
 
     def _index_document(self, doc: PaperlessDocument) -> IndexedDocument | None:
         """Return the index entry of a document, or None when it is out of scope."""
@@ -188,6 +203,7 @@ class PaperlessLookupCoordinator(DataUpdateCoordinator[DocumentIndex]):
         with_correspondent = [doc for doc in documents if doc.correspondent is not None]
         return {
             "last_update_success": self.last_update_success,
+            "access_tag_visible": self.data.access_tag_visible,
             # Objects the Paperless user can see (owned objects must be shared with it).
             "document_types_visible": len(self.data.document_types),
             "correspondents_visible": len(self.data.correspondents),

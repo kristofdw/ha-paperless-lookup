@@ -15,13 +15,17 @@ import {
   type Filters,
   type HomeAssistant,
   type PaperlessDocument,
+  type Store,
 } from "./api";
 import { documentRow, sharedStyles } from "./components";
 import {
   PAGE_SIZE,
+  STORE_SEARCH_THRESHOLD,
   buildSearchRequest,
   debounce,
   emptySearchState,
+  matchStores,
+  storesForCategories,
   toggleCategory,
   type SearchState,
 } from "./format";
@@ -48,6 +52,9 @@ export class PaperlessLookupPanel extends LitElement {
   declare private _linking?: string;
   declare private _linkQuery: string;
   declare private _linkResults: PaperlessDocument[];
+  declare private _storeQuery: string;
+  declare private _storeOpen: boolean;
+  declare private _storeActive: number;
 
   static override properties = {
     hass: { attribute: false },
@@ -67,6 +74,9 @@ export class PaperlessLookupPanel extends LitElement {
     _linking: { state: true },
     _linkQuery: { state: true },
     _linkResults: { state: true },
+    _storeQuery: { state: true },
+    _storeOpen: { state: true },
+    _storeActive: { state: true },
   };
 
   private _searchSeq = 0;
@@ -85,6 +95,9 @@ export class PaperlessLookupPanel extends LitElement {
     this._tab = "search";
     this._linkQuery = "";
     this._linkResults = [];
+    this._storeQuery = "";
+    this._storeOpen = false;
+    this._storeActive = 0;
   }
 
   private _t(key: LocalizeKey, vars?: Record<string, string | number>): string {
@@ -138,6 +151,138 @@ export class PaperlessLookupPanel extends LitElement {
     this._state = { ...this._state, ...changes, page: changes.page ?? 1 };
     if (debounced) this._debouncedSearch();
     else void this._search(changes.page !== undefined && changes.page > 1);
+  }
+
+  /** Stores with documents in the selected categories. */
+  private _stores(categories = this._state.categories): Store[] {
+    return storesForCategories(this._filters?.correspondents ?? [], categories);
+  }
+
+  private _toggleCategory(id: number): void {
+    const categories = toggleCategory(this._state.categories, id);
+    const { correspondent } = this._state;
+    const stillListed = this._stores(categories).some((store) => store.id === correspondent);
+    this._update(stillListed ? { categories } : { categories, correspondent: null });
+  }
+
+  private _clearFilters = (): void => {
+    this._storeQuery = "";
+    this._storeOpen = false;
+    this._update(emptySearchState());
+  };
+
+  private _pickStore(id: number | null): void {
+    this._storeQuery = "";
+    this._storeOpen = false;
+    this._update({ correspondent: id });
+  }
+
+  private _onStoreKey(event: KeyboardEvent, matches: Store[]): void {
+    if (event.key === "Escape") {
+      this._storeOpen = false;
+      return;
+    }
+    if (event.key === "Enter") {
+      const match = matches[this._storeActive];
+      if (this._storeOpen && match) this._pickStore(match.id);
+      return;
+    }
+    if ((event.key !== "ArrowDown" && event.key !== "ArrowUp") || !matches.length) return;
+    event.preventDefault();
+    this._storeOpen = true;
+    const step = event.key === "ArrowDown" ? 1 : -1;
+    this._storeActive = (this._storeActive + step + matches.length) % matches.length;
+    void this.updateComplete.then(() =>
+      this.renderRoot.querySelector(".store-list .active")?.scrollIntoView?.({ block: "nearest" }),
+    );
+  }
+
+  private _storeFilter(): TemplateResult | typeof nothing {
+    const stores = this._stores();
+    if (!stores.length) return nothing;
+    return stores.length > STORE_SEARCH_THRESHOLD
+      ? this._storePicker(stores)
+      : this._storeSelect(stores);
+  }
+
+  private _storeSelect(stores: Store[]): TemplateResult {
+    const selected = this._state.correspondent;
+    return html`<select
+      aria-label=${this._t("search.all_stores")}
+      @change=${(event: Event) => {
+        const value = (event.target as HTMLSelectElement).value;
+        this._update({ correspondent: value ? Number(value) : null });
+      }}
+    >
+      <option value="" ?selected=${selected === null}>${this._t("search.all_stores")}</option>
+      ${stores.map(
+        (store) =>
+          html`<option value=${store.id} ?selected=${selected === store.id}>${store.name}</option>`,
+      )}
+    </select>`;
+  }
+
+  /** Search field with a suggestion list, for long store lists. */
+  private _storePicker(stores: Store[]): TemplateResult {
+    const selected = stores.find((store) => store.id === this._state.correspondent);
+    const open = this._storeOpen;
+    const matches = matchStores(stores, this._storeQuery);
+    return html`<div class="store-picker">
+      <input
+        type="text"
+        role="combobox"
+        autocomplete="off"
+        aria-autocomplete="list"
+        aria-expanded=${open}
+        aria-controls="store-list"
+        aria-label=${this._t("search.find_store")}
+        placeholder=${this._t("search.find_store")}
+        .value=${open ? this._storeQuery : (selected?.name ?? "")}
+        @focus=${() => {
+          this._storeQuery = "";
+          this._storeActive = 0;
+          this._storeOpen = true;
+        }}
+        @blur=${() => (this._storeOpen = false)}
+        @input=${(event: Event) => {
+          this._storeQuery = (event.target as HTMLInputElement).value;
+          this._storeActive = 0;
+          this._storeOpen = true;
+        }}
+        @keydown=${(event: KeyboardEvent) => this._onStoreKey(event, matches)}
+      />
+      ${selected && !open
+        ? html`<button
+            class="store-clear"
+            aria-label=${this._t("search.clear_store")}
+            title=${this._t("search.clear_store")}
+            @click=${() => this._pickStore(null)}
+          >
+            ✕
+          </button>`
+        : nothing}
+      ${open
+        ? html`<ul id="store-list" class="store-list" role="listbox">
+            ${matches.length
+              ? matches.map(
+                  (store, index) =>
+                    html`<li
+                      role="option"
+                      aria-selected=${store.id === selected?.id}
+                      class=${index === this._storeActive ? "active" : ""}
+                      @mousedown=${(event: Event) => {
+                        // Keep the focus, so the blur does not close the list before the pick.
+                        event.preventDefault();
+                        this._pickStore(store.id);
+                      }}
+                    >
+                      ${store.name}
+                    </li>`,
+                )
+              : html`<li class="none">${this._t("search.no_stores")}</li>`}
+          </ul>`
+        : nothing}
+    </div>`;
   }
 
   private async _loadDevices(): Promise<void> {
@@ -245,33 +390,14 @@ export class PaperlessLookupPanel extends LitElement {
             (category) => html`<button
               class=${state.categories.includes(category.id) ? "chip selected" : "chip"}
               aria-pressed=${state.categories.includes(category.id)}
-              @click=${() =>
-                this._update({ categories: toggleCategory(state.categories, category.id) })}
+              @click=${() => this._toggleCategory(category.id)}
             >
               ${category.name}
             </button>`,
           )}
         </div>
         <div class="filters">
-          ${filters?.correspondents.length
-            ? html`<select
-                aria-label=${this._t("search.all_stores")}
-                @change=${(event: Event) => {
-                  const value = (event.target as HTMLSelectElement).value;
-                  this._update({ correspondent: value ? Number(value) : null });
-                }}
-              >
-                <option value="" ?selected=${state.correspondent === null}>
-                  ${this._t("search.all_stores")}
-                </option>
-                ${filters.correspondents.map(
-                  (item) =>
-                    html`<option value=${item.id} ?selected=${state.correspondent === item.id}>
-                      ${item.name}
-                    </option>`,
-                )}
-              </select>`
-            : nothing}
+          ${this._storeFilter()}
           <label
             >${this._t("search.from")}
             <input
@@ -292,7 +418,7 @@ export class PaperlessLookupPanel extends LitElement {
               @change=${(event: Event) =>
                 this._update({ dateTo: (event.target as HTMLInputElement).value })}
           /></label>
-          <button class="action" @click=${() => this._update(emptySearchState())}>
+          <button class="action" @click=${this._clearFilters}>
             ${this._t("search.clear")}
           </button>
         </div>
@@ -463,6 +589,53 @@ export class PaperlessLookupPanel extends LitElement {
         flex-wrap: wrap;
         gap: 8px;
         align-items: center;
+      }
+      .store-picker {
+        position: relative;
+        flex: 1 1 220px;
+        max-width: 340px;
+      }
+      .store-picker input {
+        width: 100%;
+        padding-right: 36px;
+      }
+      .store-clear {
+        position: absolute;
+        top: 0;
+        right: 0;
+        height: 100%;
+        width: 36px;
+        border: none;
+        background: none;
+        color: var(--secondary-text-color);
+      }
+      .store-list {
+        position: absolute;
+        z-index: 3;
+        top: 100%;
+        left: 0;
+        right: 0;
+        margin: 4px 0 0;
+        padding: 4px 0;
+        max-height: 260px;
+        overflow-y: auto;
+        list-style: none;
+        background: var(--card-background-color);
+        border: 1px solid var(--divider-color);
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      }
+      .store-list li {
+        padding: 10px 12px;
+        cursor: pointer;
+      }
+      .store-list li.active,
+      .store-list li:hover {
+        background: var(--secondary-background-color);
+      }
+      .store-list li.none {
+        color: var(--secondary-text-color);
+        cursor: default;
       }
       .filters label {
         display: flex;

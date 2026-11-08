@@ -38,11 +38,12 @@ async def test_link_unlink_ignore(hass: HomeAssistant, hass_storage: dict[str, A
 
     saved = hass_storage[KEY]
     assert saved["version"] == 1
-    assert saved["minor_version"] == 1
+    assert saved["minor_version"] == 2
     assert saved["data"] == {
         "links": {"dev-a": [3, 9]},
         "unlinks": {"dev-a": [5]},
         "ignored": ["dev-b"],
+        "panel_hidden_users": [],
     }
 
     reloaded = LinkStore(hass, ENTRY_ID)
@@ -56,6 +57,7 @@ async def test_link_unlink_ignore(hass: HomeAssistant, hass_storage: dict[str, A
         "links": {"dev-a": [5, 9]},
         "unlinks": {"dev-a": [3]},
         "ignored": [],
+        "panel_hidden_users": [],
     }
 
 
@@ -75,6 +77,7 @@ async def test_remove_device(hass: HomeAssistant, hass_storage: dict[str, Any]) 
         "links": {"dev-b": [1]},
         "unlinks": {},
         "ignored": [],
+        "panel_hidden_users": [],
     }
 
 
@@ -103,7 +106,12 @@ async def test_migrate_older_minor_version(
 
     await store.async_load()
 
-    assert store.data == {"links": {"dev-a": [1, 2]}, "unlinks": {}, "ignored": []}
+    assert store.data == {
+        "links": {"dev-a": [1, 2]},
+        "unlinks": {},
+        "ignored": [],
+        "panel_hidden_users": [],
+    }
 
 
 async def test_newer_major_version(hass: HomeAssistant, hass_storage: dict[str, Any]) -> None:
@@ -115,7 +123,24 @@ async def test_newer_major_version(hass: HomeAssistant, hass_storage: dict[str, 
         await store.async_load()
 
 
+async def test_panel_hidden_users(hass: HomeAssistant, hass_storage: dict[str, Any]) -> None:
+    """Test remembering the users whose sidebar item was hidden; unchanged data is not saved."""
+    store = LinkStore(hass, ENTRY_ID)
+    await store.async_load()
+
+    await store.async_set_panel_hidden_users(set())
+    assert KEY not in hass_storage
+
+    await store.async_set_panel_hidden_users({"user-b", "user-a"})
+    assert hass_storage[KEY]["data"]["panel_hidden_users"] == ["user-a", "user-b"]
+
+
 @pytest.mark.parametrize("raw", [None, [], "x", {"links": "x", "unlinks": None, "ignored": [1]}])
 def test_normalize_garbage(raw: object) -> None:
     """Test that malformed data becomes empty data."""
-    assert normalize_data(raw) == {"links": {}, "unlinks": {}, "ignored": []}
+    assert normalize_data(raw) == {
+        "links": {},
+        "unlinks": {},
+        "ignored": [],
+        "panel_hidden_users": [],
+    }

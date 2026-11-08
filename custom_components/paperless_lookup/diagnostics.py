@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 
 from . import PaperlessLookupConfigEntry
 from .api import API_VERSION
-from .const import CONF_CATEGORIES, CONF_PAPERLESS_USER_ID
+from .const import CONF_CATEGORIES, CONF_PANEL_USERS, CONF_PAPERLESS_USER_ID
 from .helpers import has_write_access, missing_permissions
 
 TO_REDACT = {CONF_API_TOKEN, CONF_URL, CONF_PAPERLESS_USER_ID}
@@ -25,6 +25,7 @@ async def async_get_config_entry_diagnostics(
     options = dict(entry.options)
     categories = options.get(CONF_CATEGORIES, {})
     options[CONF_CATEGORIES] = {type_id: len(users) for type_id, users in categories.items()}
+    options[CONF_PANEL_USERS] = len(options.get(CONF_PANEL_USERS, []))
     data = entry.runtime_data
     return {
         "entry": {

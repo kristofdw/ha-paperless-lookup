@@ -4,7 +4,8 @@ Stored in Home Assistant's ``.storage`` (no document data, only ids):
 
 - ``links``: device id -> document ids linked by hand,
 - ``unlinks``: device id -> document ids that matched by model but were removed by hand,
-- ``ignored``: device ids that never count as "without manual".
+- ``ignored``: device ids that never count as "without manual",
+- ``panel_hidden_users``: Home Assistant users whose sidebar item this integration hid.
 """
 
 from typing import Any, Final, TypedDict
@@ -15,7 +16,7 @@ from homeassistant.helpers.storage import Store
 from .const import DOMAIN
 
 STORAGE_VERSION: Final = 1
-STORAGE_MINOR_VERSION: Final = 1
+STORAGE_MINOR_VERSION: Final = 2
 
 
 class LinksData(TypedDict):
@@ -24,6 +25,7 @@ class LinksData(TypedDict):
     links: dict[str, list[int]]
     unlinks: dict[str, list[int]]
     ignored: list[str]
+    panel_hidden_users: list[str]
 
 
 def _id_lists(raw: object) -> dict[str, list[int]]:
@@ -39,18 +41,19 @@ def _id_lists(raw: object) -> dict[str, list[int]]:
     return result
 
 
+def _strings(raw: object) -> list[str]:
+    """Return the unique strings of a list, sorted."""
+    return sorted({item for item in raw if isinstance(item, str)}) if isinstance(raw, list) else []
+
+
 def normalize_data(raw: object) -> LinksData:
     """Return valid store data, dropping anything malformed."""
     data = raw if isinstance(raw, dict) else {}
-    ignored = data.get("ignored")
     return LinksData(
         links=_id_lists(data.get("links")),
         unlinks=_id_lists(data.get("unlinks")),
-        ignored=sorted(
-            {item for item in ignored if isinstance(item, str)}
-            if isinstance(ignored, list)
-            else set()
-        ),
+        ignored=_strings(data.get("ignored")),
+        panel_hidden_users=_strings(data.get("panel_hidden_users")),
     )
 
 
@@ -60,7 +63,7 @@ class _LinksStore(Store[LinksData]):
     async def _async_migrate_func(
         self, old_major_version: int, old_minor_version: int, old_data: dict[str, Any]
     ) -> LinksData:
-        """Migrate older data. Version 1.0 (pre-release) could lack keys; fill them in.
+        """Migrate older data: missing keys are filled in, malformed values dropped.
 
         Home Assistant itself refuses data of a newer major version.
         """
@@ -126,6 +129,12 @@ class LinkStore:
             current.discard(device_id)
         self._data["ignored"] = sorted(current)
         await self._async_save()
+
+    async def async_set_panel_hidden_users(self, user_ids: set[str]) -> None:
+        """Remember for which users this integration hid the sidebar item."""
+        if sorted(user_ids) != self._data["panel_hidden_users"]:
+            self._data["panel_hidden_users"] = sorted(user_ids)
+            await self._async_save()
 
     async def async_remove_device(self, device_id: str) -> None:
         """Forget everything about a removed device."""

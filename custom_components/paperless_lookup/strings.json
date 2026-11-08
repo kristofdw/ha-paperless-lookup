@@ -71,22 +71,24 @@
       "init": {
         "title": "Paperless Lookup options",
         "menu_options": {
-          "access": "Access tag",
+          "access": "Access tag and visibility",
           "categories": "Categories and users",
           "devices": "Devices",
           "general": "Refresh interval"
         }
       },
       "access": {
-        "title": "Access tag",
+        "title": "Access tag and visibility",
         "description": "Only Paperless documents with this tag are visible in Home Assistant.",
         "data": {
           "access_tag": "Access tag",
-          "admins_always": "Administrators see all categories"
+          "admins_always": "Administrators see all categories",
+          "panel_users": "Users who see Paperless Lookup in the sidebar"
         },
         "data_description": {
           "access_tag": "Without an access tag, no document is visible.",
-          "admins_always": "Home Assistant administrators get access to every category."
+          "admins_always": "Home Assistant administrators get access to every category.",
+          "panel_users": "None chosen: everyone sees it. This only concerns the menu item; which documents someone may see is chosen per category."
         }
       },
       "categories": {

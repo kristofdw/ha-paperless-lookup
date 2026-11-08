@@ -50,6 +50,7 @@ from .const import (
     CONF_CATEGORIES,
     CONF_DEVICE_CATEGORIES,
     CONF_MODEL_FIELD,
+    CONF_PANEL_USERS,
     CONF_PAPERLESS_USER_ID,
     CONF_REFRESH_INTERVAL,
     CONF_ZIGBEE2MQTT_FALLBACK,
@@ -319,6 +320,7 @@ class PaperlessLookupOptionsFlow(OptionsFlowWithReload):
                 {
                     CONF_ACCESS_TAG: int(tag) if tag else None,
                     CONF_ADMINS_ALWAYS: user_input[CONF_ADMINS_ALWAYS],
+                    CONF_PANEL_USERS: sorted(user_input.get(CONF_PANEL_USERS, [])),
                 }
             )
         try:
@@ -326,15 +328,18 @@ class PaperlessLookupOptionsFlow(OptionsFlowWithReload):
         except PaperlessError:
             return self.async_abort(reason="cannot_connect")
         options = self.config_entry.options
+        user_selector, user_ids = await self._async_user_selector()
         schema = probatio.Schema(
             {
                 probatio.Optional(CONF_ACCESS_TAG): _select(tags),
                 probatio.Required(CONF_ADMINS_ALWAYS): BooleanSelector(),
+                probatio.Optional(CONF_PANEL_USERS): user_selector,
             }
         )
         current_tag = options.get(CONF_ACCESS_TAG)
         suggested: dict[str, Any] = {
-            CONF_ADMINS_ALWAYS: options.get(CONF_ADMINS_ALWAYS, DEFAULT_ADMINS_ALWAYS)
+            CONF_ADMINS_ALWAYS: options.get(CONF_ADMINS_ALWAYS, DEFAULT_ADMINS_ALWAYS),
+            CONF_PANEL_USERS: [uid for uid in options.get(CONF_PANEL_USERS, []) if uid in user_ids],
         }
         if current_tag in {tag.id for tag in tags}:
             suggested[CONF_ACCESS_TAG] = str(current_tag)
@@ -376,15 +381,7 @@ class PaperlessLookupOptionsFlow(OptionsFlowWithReload):
                     for key, type_id in self._user_field_keys.items()
                 }
             )
-        users = [
-            SelectOptionDict(value=user.id, label=user.name or user.id)
-            for user in await self.hass.auth.async_get_users()
-            if user.is_active and not user.system_generated
-        ]
-        user_ids = {option["value"] for option in users}
-        user_selector = SelectSelector(
-            SelectSelectorConfig(options=users, multiple=True, mode=SelectSelectorMode.LIST)
-        )
+        user_selector, user_ids = await self._async_user_selector()
         self._user_field_keys = {}
         for type_id in self._selected_categories:
             key = self._document_types[type_id]
@@ -482,6 +479,18 @@ class PaperlessLookupOptionsFlow(OptionsFlowWithReload):
         return self.async_show_form(
             step_id="general", data_schema=self.add_suggested_values_to_schema(schema, suggested)
         )
+
+    async def _async_user_selector(self) -> tuple[SelectSelector, set[str]]:
+        """Return a multi-select of the Home Assistant users, and their ids."""
+        users = [
+            SelectOptionDict(value=user.id, label=user.name or user.id)
+            for user in await self.hass.auth.async_get_users()
+            if user.is_active and not user.system_generated
+        ]
+        selector = SelectSelector(
+            SelectSelectorConfig(options=users, multiple=True, mode=SelectSelectorMode.LIST)
+        )
+        return selector, {option["value"] for option in users}
 
     def _categories(self) -> dict[str, list[str]]:
         """Return the current categories option."""

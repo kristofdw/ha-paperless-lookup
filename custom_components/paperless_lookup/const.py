@@ -13,6 +13,8 @@ CONF_ACCESS_TAG: Final = "access_tag"  # Paperless tag id, or None.
 # {"<document type id>": [Home Assistant user ids]}; the keys are the enabled categories.
 CONF_CATEGORIES: Final = "categories"
 CONF_ADMINS_ALWAYS: Final = "admins_always"
+# Home Assistant user ids that see the sidebar item; empty means every user.
+CONF_PANEL_USERS: Final = "panel_users"
 CONF_DEVICE_CATEGORIES: Final = "device_categories"  # Document type ids (subset of categories).
 CONF_MODEL_FIELD: Final = "model_field"  # Paperless custom field id, or None.
 CONF_ZIGBEE2MQTT_FALLBACK: Final = "zigbee2mqtt_fallback"

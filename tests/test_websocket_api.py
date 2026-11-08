@@ -1,5 +1,6 @@
 """Tests for the websocket API: every command, allowed and denied."""
 
+from dataclasses import replace
 from http import HTTPStatus
 from typing import Any
 
@@ -137,21 +138,42 @@ async def test_filters(
     assert guest["result"] == {
         "categories": [{"id": MANUAL, "name": "Manual"}],
         "correspondents": [
-            {"id": 2, "name": "Aqara"},
-            {"id": 1, "name": "IKEA"},
-            {"id": 3, "name": "Philips Hue"},
+            {"id": 2, "name": "Aqara", "categories": [MANUAL]},
+            {"id": 1, "name": "IKEA", "categories": [MANUAL]},
+            {"id": 3, "name": "Philips Hue", "categories": [MANUAL]},
         ],
         "date_min": "2022-08-14",
         "date_max": "2024-05-10",
     }
     reader_stores = {item["name"] for item in reader["result"]["correspondents"]}
     assert {"Sample Supermarket", "Demo Electronics"} <= reader_stores
+    # Only categories the user may see are listed per store.
+    demo = next(
+        item for item in reader["result"]["correspondents"] if item["name"] == "Demo Electronics"
+    )
+    assert demo["categories"] == [RECEIPT]
     assert nobody["result"] == {
         "categories": [],
         "correspondents": [],
         "date_min": None,
         "date_max": None,
     }
+
+
+async def test_filters_skip_documents_without_store(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    setup: MockConfigEntry,
+    users: Users,
+) -> None:
+    """Test that a store only listed through documents without one disappears."""
+    documents = setup.runtime_data.coordinator.data.documents
+    for doc_id in (TRADFRI_DOC, 2):  # the two IKEA manuals
+        documents[doc_id] = replace(documents[doc_id], correspondent=None)
+
+    response = await call(hass, hass_ws_client, users.guest, type="paperless_lookup/filters")
+
+    assert "IKEA" not in {item["name"] for item in response["result"]["correspondents"]}
 
 
 async def test_search(

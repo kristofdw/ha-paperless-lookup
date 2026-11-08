@@ -6,7 +6,9 @@ import {
   debounce,
   emptySearchState,
   formatDate,
+  matchStores,
   previewType,
+  storesForCategories,
   toggleCategory,
 } from "../src/format";
 import { localize, pickLanguage } from "../src/localize";
@@ -87,6 +89,30 @@ describe("helpers", () => {
     vi.advanceTimersByTime(1);
     expect(fn).toHaveBeenCalledExactlyOnceWith(2);
     vi.useRealTimers();
+  });
+});
+
+describe("stores", () => {
+  const stores = [
+    { id: 1, name: "Brico", categories: [2] },
+    { id: 2, name: "Café Élite", categories: [2, 3] },
+    { id: 3, name: "IKEA", categories: [1] },
+    { id: 4, name: "Mediamarkt Brugge", categories: [1, 3] },
+  ];
+
+  it("keeps only stores with documents in the selected categories", () => {
+    expect(storesForCategories(stores, [])).toEqual(stores);
+    expect(storesForCategories(stores, [1]).map((store) => store.id)).toEqual([3, 4]);
+    expect(storesForCategories(stores, [1, 2]).map((store) => store.id)).toEqual([1, 2, 3, 4]);
+    expect(storesForCategories(stores, [9])).toEqual([]);
+  });
+
+  it("finds stores ignoring case and accents, names starting with the text first", () => {
+    expect(matchStores(stores, "  ")).toEqual(stores);
+    expect(matchStores(stores, "elite").map((store) => store.id)).toEqual([2]);
+    expect(matchStores(stores, "BR").map((store) => store.id)).toEqual([1, 4]);
+    expect(matchStores(stores, "bru").map((store) => store.id)).toEqual([4]);
+    expect(matchStores(stores, "zzz")).toEqual([]);
   });
 });
 

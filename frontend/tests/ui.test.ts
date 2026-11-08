@@ -17,7 +17,7 @@ const filters = () => ({
     { id: 1, name: "Manual" },
     { id: 2, name: "Receipt" },
   ],
-  correspondents: [{ id: 1, name: "IKEA" }],
+  correspondents: [{ id: 1, name: "IKEA", categories: [1] }],
   date_min: "2022-08-14",
   date_max: "2026-10-30",
 });
@@ -63,6 +63,145 @@ describe("panel", () => {
       }),
     );
     expect(withStores.shadowRoot!.querySelectorAll("select option")).toHaveLength(2);
+  });
+
+  it("lists only the stores of the selected categories and resets a store that drops out", async () => {
+    const hass = fakeHass({
+      access: () => access(),
+      filters: () => ({
+        ...filters(),
+        correspondents: [
+          { id: 1, name: "IKEA", categories: [1] },
+          { id: 2, name: "Supermarket", categories: [2] },
+        ],
+      }),
+      search: () => ({ count: 0, results: [] }),
+      sign_documents: () => ({ paths: {} }),
+    });
+    const panel = await mountPanel(hass);
+    const root = panel.shadowRoot!;
+    const options = () => [...root.querySelectorAll("select option")].map((o) => o.textContent?.trim());
+    const chip = (name: string) =>
+      [...root.querySelectorAll<HTMLButtonElement>(".chip")].find(
+        (button) => button.textContent?.trim() === name,
+      )!;
+    expect(options()).toEqual(["All stores", "IKEA", "Supermarket"]);
+
+    const select = root.querySelector("select")!;
+    select.value = "2";
+    select.dispatchEvent(new Event("change"));
+    await settle(panel);
+    expect(hass.calls.filter((call) => call.type === "paperless_lookup/search").at(-1)).toMatchObject(
+      { correspondents: [2] },
+    );
+
+    chip("Receipt").click();
+    await settle(panel);
+    expect(options()).toEqual(["All stores", "Supermarket"]);
+    expect(hass.calls.filter((call) => call.type === "paperless_lookup/search").at(-1)).toMatchObject(
+      { categories: [2], correspondents: [2] },
+    );
+
+    chip("Receipt").click();
+    await settle(panel);
+    chip("Manual").click();
+    await settle(panel);
+    expect(options()).toEqual(["All stores", "IKEA"]);
+    const last = hass.calls.filter((call) => call.type === "paperless_lookup/search").at(-1);
+    expect(last).toMatchObject({ categories: [1] });
+    expect(last).not.toHaveProperty("correspondents");
+  });
+
+  it("offers a search field for long store lists", async () => {
+    const correspondents = Array.from({ length: 20 }, (_, index) => ({
+      id: index + 1,
+      name: `Store ${String(index + 1).padStart(2, "0")}`,
+      categories: [1],
+    }));
+    const hass = fakeHass({
+      access: () => access(),
+      filters: () => ({ ...filters(), correspondents }),
+      search: () => ({ count: 0, results: [] }),
+      sign_documents: () => ({ paths: {} }),
+    });
+    const panel = await mountPanel(hass);
+    const root = panel.shadowRoot!;
+    expect(root.querySelector("select")).toBeNull();
+    const input = root.querySelector<HTMLInputElement>(".store-picker input")!;
+    const items = () => [...root.querySelectorAll(".store-list li")].map((li) => li.textContent?.trim());
+
+    input.dispatchEvent(new Event("focus"));
+    await settle(panel);
+    expect(items()).toHaveLength(20);
+
+    input.value = "store 07";
+    input.dispatchEvent(new Event("input"));
+    await settle(panel);
+    expect(items()).toEqual(["Store 07"]);
+
+    root
+      .querySelector(".store-list li")!
+      .dispatchEvent(new MouseEvent("mousedown", { cancelable: true }));
+    await settle(panel);
+    expect(hass.calls.filter((call) => call.type === "paperless_lookup/search").at(-1)).toMatchObject(
+      { correspondents: [7] },
+    );
+    expect(root.querySelector(".store-list")).toBeNull();
+    expect(input.value).toBe("Store 07");
+
+    root.querySelector<HTMLButtonElement>(".store-clear")!.click();
+    await settle(panel);
+    expect(hass.calls.filter((call) => call.type === "paperless_lookup/search").at(-1)).not.toHaveProperty(
+      "correspondents",
+    );
+
+    input.dispatchEvent(new Event("focus"));
+    await settle(panel);
+    input.value = "nothing like this";
+    input.dispatchEvent(new Event("input"));
+    await settle(panel);
+    expect(items()).toEqual(["No store found"]);
+    input.dispatchEvent(new Event("blur"));
+    await settle(panel);
+    expect(root.querySelector(".store-list")).toBeNull();
+  });
+
+  it("supports the keyboard in the store search field", async () => {
+    const correspondents = Array.from({ length: 13 }, (_, index) => ({
+      id: index + 1,
+      name: `Store ${String(index + 1).padStart(2, "0")}`,
+      categories: [1],
+    }));
+    const hass = fakeHass({
+      access: () => access(),
+      filters: () => ({ ...filters(), correspondents }),
+      search: () => ({ count: 0, results: [] }),
+      sign_documents: () => ({ paths: {} }),
+    });
+    const panel = await mountPanel(hass);
+    const root = panel.shadowRoot!;
+    const input = root.querySelector<HTMLInputElement>(".store-picker input")!;
+    const press = async (key: string) => {
+      input.dispatchEvent(new KeyboardEvent("keydown", { key, cancelable: true }));
+      await settle(panel);
+    };
+
+    input.dispatchEvent(new Event("focus"));
+    await settle(panel);
+    await press("ArrowDown");
+    expect(root.querySelector(".store-list .active")?.textContent?.trim()).toBe("Store 02");
+    await press("ArrowUp");
+    await press("ArrowUp");
+    expect(root.querySelector(".store-list .active")?.textContent?.trim()).toBe("Store 13");
+    await press("Escape");
+    expect(root.querySelector(".store-list")).toBeNull();
+    await press("a");
+    await press("ArrowDown");
+    expect(root.querySelector(".store-list")).not.toBeNull();
+    await press("Enter");
+    expect(hass.calls.filter((call) => call.type === "paperless_lookup/search").at(-1)).toMatchObject(
+      { correspondents: [1] },
+    );
   });
 
   it("shows not loaded and connection errors", async () => {

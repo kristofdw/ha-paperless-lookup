@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 
+from homeassistant.auth import EVENT_USER_ADDED
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import Event, HomeAssistant, callback
@@ -18,10 +19,15 @@ from .api import (
     PaperlessUnsupportedVersionError,
     PaperlessUser,
 )
-from .const import CONF_PAPERLESS_USER_ID, DOMAIN
+from .const import CONF_PANEL_USERS, CONF_PAPERLESS_USER_ID, DOMAIN
 from .coordinator import PaperlessLookupCoordinator
 from .helpers import create_client, missing_permissions
-from .panel import async_register_frontend, async_register_panel, async_remove_panel
+from .panel import (
+    async_register_frontend,
+    async_register_panel,
+    async_remove_panel,
+    async_sync_panel_visibility,
+)
 from .store import LinkStore
 from .views import PaperlessDocumentView
 from .websocket_api import async_register as async_register_websocket_api
@@ -112,6 +118,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: PaperlessLookupConfigEnt
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await async_register_panel(hass, hass.data[DATA_MODULE_URL])
     entry.async_on_unload(lambda: async_remove_panel(hass))
+
+    panel_users = list(entry.options.get(CONF_PANEL_USERS, []))
+    await async_sync_panel_visibility(hass, store, panel_users)
+
+    @callback
+    def _user_added(_event: Event) -> None:
+        """Apply the sidebar choice to a new user."""
+        entry.async_create_background_task(
+            hass,
+            async_sync_panel_visibility(hass, store, panel_users),
+            "paperless_lookup_sync_panel_visibility",
+        )
+
+    entry.async_on_unload(hass.bus.async_listen(EVENT_USER_ADDED, _user_added))
     return True
 
 
@@ -121,5 +141,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: PaperlessLookupConfigEn
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: PaperlessLookupConfigEntry) -> None:
-    """Delete the stored links when the config entry is removed."""
-    await LinkStore(hass, entry.entry_id).async_remove()
+    """Show the sidebar item again where it was hidden and delete the stored links."""
+    store = LinkStore(hass, entry.entry_id)
+    await store.async_load()
+    await async_sync_panel_visibility(hass, store, [])
+    await store.async_remove()

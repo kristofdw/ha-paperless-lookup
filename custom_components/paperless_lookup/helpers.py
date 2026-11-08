@@ -15,6 +15,7 @@ from .const import (
     CONF_CATEGORIES,
     CONF_DEVICE_CATEGORIES,
     CONF_MODEL_FIELD,
+    CONF_PANEL_USERS,
     CONF_REFRESH_INTERVAL,
     CONF_ZIGBEE2MQTT_FALLBACK,
     DEFAULT_ACCESS_TAG_NAME,
@@ -94,6 +95,7 @@ async def async_default_options(client: PaperlessClient) -> dict[str, Any]:
         CONF_ACCESS_TAG: access_tag,
         CONF_CATEGORIES: {str(doc_type.id): [] for doc_type in document_types},
         CONF_ADMINS_ALWAYS: DEFAULT_ADMINS_ALWAYS,
+        CONF_PANEL_USERS: [],
         CONF_DEVICE_CATEGORIES: [
             doc_type.id
             for doc_type in document_types

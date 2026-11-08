@@ -1,6 +1,6 @@
 /** Pure helpers shared by the panel and the card (unit tested). */
 
-import type { HomeAssistant, SearchRequest } from "./api";
+import type { HomeAssistant, SearchRequest, Store } from "./api";
 
 export interface SearchState {
   query: string;
@@ -12,6 +12,8 @@ export interface SearchState {
 }
 
 export const PAGE_SIZE = 25;
+/** With more stores than this, the store filter becomes a search field. */
+export const STORE_SEARCH_THRESHOLD = 12;
 
 export const emptySearchState = (): SearchState => ({
   query: "",
@@ -41,6 +43,29 @@ export const buildSearchRequest = (state: SearchState): SearchRequest => {
 /** Toggle a category chip. */
 export const toggleCategory = (categories: number[], id: number): number[] =>
   categories.includes(id) ? categories.filter((item) => item !== id) : [...categories, id];
+
+/** The stores with documents in the selected categories (no selection: all stores). */
+export const storesForCategories = (stores: Store[], categories: number[]): Store[] =>
+  categories.length
+    ? stores.filter((store) => store.categories.some((id) => categories.includes(id)))
+    : stores;
+
+const searchable = (text: string): string =>
+  text
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase();
+
+/** Stores matching what was typed (case and accents ignored), names starting with it first. */
+export const matchStores = (stores: Store[], query: string): Store[] => {
+  const needle = searchable(query.trim());
+  if (!needle) return stores;
+  const matches = stores.filter((store) => searchable(store.name).includes(needle));
+  return [
+    ...matches.filter((store) => searchable(store.name).startsWith(needle)),
+    ...matches.filter((store) => !searchable(store.name).startsWith(needle)),
+  ];
+};
 
 /** Format an ISO date (YYYY-MM-DD) for the user's language, without time zone shifts. */
 export const formatDate = (iso: string | null, language: string): string => {

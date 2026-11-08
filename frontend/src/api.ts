@@ -22,9 +22,14 @@ export interface Access {
   zigbee2mqtt_fallback: boolean;
 }
 
+/** A store with the categories in which it has documents the user may see. */
+export interface Store extends Named {
+  categories: number[];
+}
+
 export interface Filters {
   categories: Named[];
-  correspondents: Named[];
+  correspondents: Store[];
   date_min: string | null;
   date_max: string | null;
 }

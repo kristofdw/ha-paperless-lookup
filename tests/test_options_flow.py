@@ -16,6 +16,7 @@ from custom_components.paperless_lookup.const import (
     CONF_CATEGORIES,
     CONF_DEVICE_CATEGORIES,
     CONF_MODEL_FIELD,
+    CONF_PANEL_USERS,
     CONF_REFRESH_INTERVAL,
     CONF_ZIGBEE2MQTT_FALLBACK,
 )
@@ -81,7 +82,11 @@ async def test_access(hass: HomeAssistant, loaded_entry: MockConfigEntry) -> Non
     result = await open_step(hass, loaded_entry, "access")
     assert result["step_id"] == "access"
     assert select_options(result, CONF_ACCESS_TAG) == [("2", "Finance"), ("1", "HA")]
-    assert suggested(result) == {CONF_ACCESS_TAG: "1", CONF_ADMINS_ALWAYS: True}
+    assert suggested(result) == {
+        CONF_ACCESS_TAG: "1",
+        CONF_ADMINS_ALWAYS: True,
+        CONF_PANEL_USERS: [],
+    }
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], {CONF_ACCESS_TAG: "2", CONF_ADMINS_ALWAYS: False}
@@ -95,6 +100,38 @@ async def test_access(hass: HomeAssistant, loaded_entry: MockConfigEntry) -> Non
         CONF_ADMINS_ALWAYS: False,
     }
     assert loaded_entry.state is ConfigEntryState.LOADED
+
+
+async def test_panel_users(
+    hass: HomeAssistant,
+    loaded_entry: MockConfigEntry,
+    hass_admin_user: MockUser,
+    hass_read_only_user: MockUser,
+) -> None:
+    """Test choosing who sees the sidebar item; removed users are not suggested."""
+    hass.config_entries.async_update_entry(
+        loaded_entry,
+        options={**loaded_entry.options, CONF_PANEL_USERS: [hass_admin_user.id, "deleted-user"]},
+    )
+    await hass.async_block_till_done()
+    result = await open_step(hass, loaded_entry, "access")
+    assert (hass_read_only_user.id, hass_read_only_user.name) in select_options(
+        result, CONF_PANEL_USERS
+    )
+    assert suggested(result)[CONF_PANEL_USERS] == [hass_admin_user.id]
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            CONF_ADMINS_ALWAYS: True,
+            CONF_PANEL_USERS: [hass_read_only_user.id, hass_admin_user.id],
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert loaded_entry.options[CONF_PANEL_USERS] == sorted(
+        [hass_read_only_user.id, hass_admin_user.id]
+    )
 
 
 async def test_access_cleared(hass: HomeAssistant, loaded_entry: MockConfigEntry) -> None:

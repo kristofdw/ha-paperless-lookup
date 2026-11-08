@@ -158,10 +158,13 @@ supported.
 *Settings → Devices & services → Paperless Lookup →* **Configure**. The options are a menu; every choice
 in the lists comes live from Paperless.
 
-- **Access tag**
+- **Access tag and visibility**
   - *Access tag*: the tag that releases documents (without one, nothing is visible).
   - *Administrators see all categories*: on by default. Switch it off to give administrators access per
     category too.
+  - *Users who see Paperless Lookup in the sidebar*: choose who gets the menu item. With nobody chosen,
+    everyone gets it. This only concerns the menu item: which documents someone may see (also on
+    dashboard cards) is set per category below.
 - **Categories and users**
   - First choose which document types are categories in Home Assistant. Documents of other types are
     not visible.
@@ -186,14 +189,17 @@ The integration reloads after every change.
 **Paperless Lookup** in the sidebar (or `/paperless-lookup`) is made for the phone:
 
 - search in titles and content,
-- filter chips per category, a store filter and a date range,
+- filter chips per category and a date range,
+- a store filter that only lists stores with documents in the selected categories, and becomes a search
+  field when there are many stores,
 - results with a thumbnail, date, store, category and the matched words,
 - tap a result for a preview with **Open** and **Download**,
 - for administrators: a tab **Devices without manual** (see section 6).
 
-Users without access see a "no access" message. Home Assistant cannot hide a sidebar item per user;
-such users can hide it themselves (*Profile → Change the order and hide items from the sidebar*). The
-data itself is protected in the backend.
+Users without access to any category see a "no access" message. To remove the menu item for some users,
+use *Users who see Paperless Lookup in the sidebar* in the options; it is applied through each user's
+sidebar settings, so a user can bring it back under *Profile*. The documents stay protected in the
+backend either way: opening the panel by its address only shows the categories that user has access to.
 
 > On Android, the Companion app cannot show PDF files inline. The preview then shows the first page;
 > use **Open** or **Download** for the full document.

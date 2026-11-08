@@ -212,14 +212,19 @@ async def ws_filters(
     index = entry.runtime_data.coordinator.data
     documents = [doc for doc in index.documents.values() if access.can_view(doc.document_type)]
     dates = [doc.created for doc in documents if doc.created]
+    # Per store the categories with documents, so the panel can narrow the store list.
+    store_categories: dict[int, set[int]] = {}
+    for doc in documents:
+        if doc.correspondent is not None:
+            store_categories.setdefault(doc.correspondent, set()).add(doc.document_type)
     connection.send_result(
         msg["id"],
         {
             "categories": _named({doc.document_type for doc in documents}, index.document_types),
-            "correspondents": _named(
-                {doc.correspondent for doc in documents if doc.correspondent is not None},
-                index.correspondents,
-            ),
+            "correspondents": [
+                {**store, "categories": sorted(store_categories[store["id"]])}
+                for store in _named(set(store_categories), index.correspondents)
+            ],
             "date_min": min(dates).isoformat() if dates else None,
             "date_max": max(dates).isoformat() if dates else None,
         },

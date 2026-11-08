@@ -71,22 +71,24 @@
       "init": {
         "title": "Opties van Paperless Lookup",
         "menu_options": {
-          "access": "Toegangstag",
+          "access": "Toegangstag en zichtbaarheid",
           "categories": "Categorieën en gebruikers",
           "devices": "Toestellen",
           "general": "Verversinterval"
         }
       },
       "access": {
-        "title": "Toegangstag",
+        "title": "Toegangstag en zichtbaarheid",
         "description": "Alleen Paperless-documenten met deze tag zijn zichtbaar in Home Assistant.",
         "data": {
           "access_tag": "Toegangstag",
-          "admins_always": "Beheerders zien alle categorieën"
+          "admins_always": "Beheerders zien alle categorieën",
+          "panel_users": "Gebruikers die Paperless Lookup in de zijbalk zien"
         },
         "data_description": {
           "access_tag": "Zonder toegangstag is geen enkel document zichtbaar.",
-          "admins_always": "Beheerders van Home Assistant krijgen toegang tot elke categorie."
+          "admins_always": "Beheerders van Home Assistant krijgen toegang tot elke categorie.",
+          "panel_users": "Niemand gekozen: iedereen ziet het. Dit gaat alleen over het menu-item; welke documenten iemand mag zien, kies je per categorie."
         }
       },
       "categories": {

@@ -7,8 +7,8 @@ from homeassistant.config_entries import ConfigEntryState, ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry, MockUser
-from pytest_homeassistant_custom_component.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.common import MockConfigEntry, MockUser
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from custom_components.paperless_lookup.const import (
     CONF_ACCESS_TAG,

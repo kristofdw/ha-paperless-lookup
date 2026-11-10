@@ -6,8 +6,8 @@ from typing import Any
 
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.core import HomeAssistant
-from pytest_homeassistant_custom_component.common import MockConfigEntry
-from pytest_homeassistant_custom_component.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from custom_components.paperless_lookup.const import CONF_CATEGORIES, CONF_PANEL_USERS
 from custom_components.paperless_lookup.diagnostics import async_get_config_entry_diagnostics

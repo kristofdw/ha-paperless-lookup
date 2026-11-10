@@ -25,6 +25,5 @@ jobs:
     steps:
       - uses: hacs/action@main
         with:
+          # The brand images live in custom_components/paperless_lookup/brand/.
           category: integration
-          # Not in home-assistant/brands yet (planned for the HACS default submission).
-          ignore: brands

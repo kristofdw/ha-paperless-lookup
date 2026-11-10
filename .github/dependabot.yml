@@ -10,7 +10,7 @@ updates:
       interval: weekly
     ignore:
       # Pinned on purpose to the minimum supported Home Assistant version.
-      - dependency-name: pytest-homeassistant-custom-component
+      - dependency-name: pytest-homeassistant
       - dependency-name: homeassistant
       - dependency-name: home-assistant-frontend
   - package-ecosystem: npm

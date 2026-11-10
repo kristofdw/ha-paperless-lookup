@@ -38,7 +38,7 @@ jobs:
       fail-fast: false
       matrix:
         # "minimum" = the locked versions (minimum supported Home Assistant, see hacs.json).
-        # "latest" = the newest pytest-homeassistant-custom-component on PyPI.
+        # "latest" = the newest pytest-homeassistant on PyPI.
         ha: [minimum, latest]
     steps:
       - uses: actions/checkout@v7
@@ -48,10 +48,10 @@ jobs:
       - if: matrix.ha == 'minimum'
         run: uv sync --locked
       - if: matrix.ha == 'latest'
-        # Fresh venv without the lint pins (mypy etc.), which may not fit the newest plugin.
+        # Fresh venv without the lint pins (mypy etc.), which may not fit the newest package.
         run: |
           uv venv --python 3.14
-          uv pip install pytest-homeassistant-custom-component
+          uv pip install pytest-homeassistant pytest-cov
           # The frontend package that this Home Assistant version pins (needed by panel_custom).
           uv pip install "$(.venv/bin/python -c "import importlib.util, json, pathlib; p = pathlib.Path(importlib.util.find_spec('homeassistant').origin).parent / 'components/frontend/manifest.json'; print(json.loads(p.read_text())['requirements'][0])")"
       - run: .venv/bin/pytest --cov-report=xml
@@ -73,5 +73,5 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
-      # HACS installs the committed bundle: it must match the sources.
+      # The Marketplace installs the committed bundle: it must match the sources.
       - run: git diff --exit-code -- ../custom_components/paperless_lookup/frontend/

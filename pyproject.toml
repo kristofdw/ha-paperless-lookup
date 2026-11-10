@@ -4,15 +4,18 @@ version = "0.0.1"
 description = "Paperless Lookup for Home Assistant: look up Paperless-ngx documents from Home Assistant."
 readme = "README.md"
 license = "Apache-2.0"
-# Home Assistant 2026.10 (the minimum supported version) requires Python 3.14.2.
+# Home Assistant 2026.11 (the minimum supported version) requires Python 3.14.2.
 requires-python = ">=3.14.2"
 
 [dependency-groups]
 dev = [
-    # Pins homeassistant==2026.10.4, the minimum supported Home Assistant version (see hacs.json).
-    "pytest-homeassistant-custom-component==0.13.375",
-    # Needed to set up the frontend/panel_custom dependencies in tests; same pin as HA 2026.10.4.
-    "home-assistant-frontend==20260930.5",
+    # Test package from Home Assistant core. Pins homeassistant==2026.11.0, the minimum supported
+    # Home Assistant version (see hacs.json).
+    "pytest-homeassistant==2026.11.0",
+    # Needed to set up the frontend/panel_custom dependencies in tests; same pin as HA 2026.11.0.
+    "home-assistant-frontend==20261028.4",
+    # Coverage; came with pytest-homeassistant-custom-component before.
+    "pytest-cov==7.1.0",
     "mypy==2.4.1",
     "ruff==0.17.4",
     "pre-commit==4.7.0",
@@ -86,7 +89,7 @@ implicit_reexport = true
 
 [[tool.mypy.overrides]]
 # The plugin ships without py.typed; its code is typed well enough to use.
-module = ["pytest_homeassistant_custom_component.*"]
+module = ["pytest_homeassistant.*"]
 follow_untyped_imports = true
 
 [[tool.mypy.overrides]]
@@ -100,6 +103,9 @@ testpaths = ["tests"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 addopts = [
+    # Let Home Assistant install its httpx alias before respx is imported.
+    "-p",
+    "no:respx",
     "--cov=custom_components.paperless_lookup",
     "--cov-branch",
     "--cov-report=term-missing",

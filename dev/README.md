@@ -50,7 +50,7 @@ write a fixture that contains the token.
 
 ## Versions
 
-`HA_VERSION` (default `2026.10.4`, the minimum supported version) and `PAPERLESS_VERSION`
+`HA_VERSION` (default `2026.11.0`, the minimum supported version) and `PAPERLESS_VERSION`
 (default `3.3.4`) can be set in `dev/.env`.
 
 ## Reset

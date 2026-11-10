@@ -1,7 +1,7 @@
 import { defineConfig } from "vitest/config";
 
 // One ES module with the panel, the card and its editor, committed to the integration because
-// HACS does not run build tools.
+// The Marketplace (formerly HACS) does not run build tools.
 export default defineConfig({
   build: {
     outDir: "../custom_components/paperless_lookup/frontend",

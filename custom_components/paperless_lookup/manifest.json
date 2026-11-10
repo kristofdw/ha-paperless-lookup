@@ -1,10 +1,16 @@
 {
   "domain": "paperless_lookup",
   "name": "Paperless Lookup",
+  "categories": [
+    "productivity_information.documents_photos"
+  ],
   "codeowners": [
     "@kristofdw"
   ],
   "config_flow": true,
+  "connectivity": [
+    "network"
+  ],
   "dependencies": [
     "frontend",
     "http",

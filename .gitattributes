@@ -3,5 +3,5 @@
 *.png binary
 *.jpg binary
 *.pdf binary
-# Built from frontend/ (see frontend/package.json); committed because HACS does not build.
+# Built from frontend/ (see frontend/package.json); committed because the Marketplace does not build.
 custom_components/paperless_lookup/frontend/*.js linguist-generated=true

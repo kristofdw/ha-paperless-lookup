@@ -2,7 +2,8 @@
 
 > **Work in progress.** Usable for testing; expect changes until the first release.
 
-A [HACS](https://hacs.xyz/) integration that makes selected [Paperless-ngx](https://docs.paperless-ngx.com/)
+A custom integration, installed through the [Marketplace](https://www.home-assistant.io/integrations/marketplace/)
+(formerly HACS), that makes selected [Paperless-ngx](https://docs.paperless-ngx.com/)
 documents searchable in [Home Assistant](https://www.home-assistant.io/):
 
 - **Manuals linked to devices:** see the manual of a device in Home Assistant, on a dashboard card or in
@@ -36,9 +37,8 @@ documents searchable in [Home Assistant](https://www.home-assistant.io/):
 
 | What | Version |
 |---|---|
-| Home Assistant | 2026.10.4 or newer |
+| Home Assistant | 2026.11.0 or newer (includes the Marketplace) |
 | Paperless-ngx | 3.0.0 or newer (REST API version 10) |
-| HACS | for the recommended installation |
 
 Home Assistant must be able to reach Paperless over the network (for example `http://paperless.local:8000`).
 Your phone only needs to reach Home Assistant.
@@ -105,16 +105,25 @@ Log in to Paperless as `ha-lookup`, open *My Profile* (user menu at the top righ
 
 ## 2. Install the integration
 
-### With HACS (recommended)
+### With the Marketplace (recommended)
 
-This integration is not in the HACS default list yet, so add it as a custom repository:
+Home Assistant 2026.11 replaced HACS with the built-in Marketplace. This integration is not in the
+Marketplace catalog yet, so add it from its GitHub link:
 
-1. Open **HACS** in Home Assistant.
-2. Open the menu (⋮ at the top right) → **Custom repositories**.
-3. Repository: `https://github.com/kristofdw/ha-paperless-lookup`, type: **Integration** → **Add**.
-4. Search for **Paperless Lookup for Home Assistant** in HACS, open it and click **Download**.
-   (There is no release yet; HACS then installs the latest version of the main branch.)
-5. **Restart Home Assistant** (*Settings → System → ⏻ → Restart Home Assistant*).
+1. Go to *Settings →* **Marketplace**.
+2. Select **Add from link** (top right). Under **GitHub link**, enter
+   `https://github.com/kristofdw/ha-paperless-lookup` (or `kristofdw/ha-paperless-lookup`) → **Add**.
+   The Marketplace asks you to connect GitHub first if you have not done that yet. If it asks for the
+   type, choose **Integration**.
+3. Open **Paperless Lookup for Home Assistant** and install it. The Marketplace warns that it is made and
+   supported by its author, not by the Home Assistant project.
+   (There is no release yet, so the Marketplace installs the latest commit of the main branch and shows a
+   commit hash as the version.)
+4. **Restart Home Assistant** when the Marketplace asks for it (a repair offers the restart), or via
+   *Settings → System → ⏻ → Restart Home Assistant*.
+
+Already installed with HACS? Nothing to do: Home Assistant 2026.11 moves your repositories and updates
+to the Marketplace.
 
 ### Manually
 
@@ -346,9 +355,10 @@ versions, permissions and counts, without token, URL, names or titles. Attach it
 
 ## Update and remove
 
-- **Update**: HACS shows updates; download, then restart Home Assistant and refresh the browser.
+- **Update**: updates appear under *Settings → Updates*, like other Home Assistant updates. Install,
+  restart Home Assistant (a repair offers the restart), then refresh the browser.
 - **Remove**: *Settings → Devices & services → Paperless Lookup → ⋮ → Delete*. The stored manual links
-  are deleted with it. Then remove the repository in HACS (or the folder) and restart. Delete the
+  are deleted with it. Then remove the repository under *Settings → Marketplace* (or delete the folder) and restart. Delete the
   `ha-lookup` user or its token in Paperless if you no longer need it.
 
 ## Development

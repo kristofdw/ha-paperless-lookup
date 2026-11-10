@@ -7,8 +7,8 @@ from typing import Any
 
 from homeassistant.const import CONF_API_TOKEN, CONF_URL, CONF_VERIFY_SSL
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
-from pytest_homeassistant_custom_component.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from custom_components.paperless_lookup.const import (
     CONF_ACCESS_TAG,
@@ -105,11 +105,6 @@ def mock_paperless(
                 json=load_json_fixture(f"documents_page_{page}"),
                 headers=headers,
             )
-
-
-@pytest.fixture(autouse=True)
-def auto_enable_custom_integrations(enable_custom_integrations: None) -> None:
-    """Enable loading custom integrations in all tests."""
 
 
 @pytest.fixture

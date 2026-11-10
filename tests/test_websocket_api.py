@@ -7,9 +7,9 @@ from typing import Any
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry as ar, device_registry as dr
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry, MockUser
-from pytest_homeassistant_custom_component.test_util.aiohttp import AiohttpClientMocker
-from pytest_homeassistant_custom_component.typing import WebSocketGenerator
+from pytest_homeassistant.common import MockConfigEntry, MockUser
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from custom_components.paperless_lookup.const import CONF_ACCESS_TAG, CONF_ADMINS_ALWAYS
 from custom_components.paperless_lookup.websocket_api import async_register, highlight_segments

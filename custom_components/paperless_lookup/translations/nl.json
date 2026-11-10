@@ -70,11 +70,14 @@
     "step": {
       "init": {
         "title": "Opties van Paperless Lookup",
+        "description": "Kies wat je wilt aanpassen. Na elke stap kom je terug in dit menu. Wijzigingen worden pas bewaard met Opslaan en sluiten; sluiten met X gooit ze weg.",
         "menu_options": {
           "access": "Toegangstag en zichtbaarheid",
-          "categories": "Categorieën en gebruikers",
+          "categories": "Categorieën",
+          "category_users": "Gebruikers per categorie",
           "devices": "Toestellen",
-          "follow_reads": "Bijhouden wie documenten opent"
+          "follow_reads": "Bijhouden wie documenten opent",
+          "save": "Opslaan en sluiten"
         }
       },
       "access": {
@@ -93,7 +96,7 @@
       },
       "categories": {
         "title": "Categorieën",
-        "description": "Een categorie is een documenttype in Paperless. Documenten van andere types, of zonder type, zijn niet zichtbaar.",
+        "description": "Een categorie is een documenttype in Paperless. Documenten van andere types, of zonder type, zijn niet zichtbaar. Daarna kies je de gebruikers per categorie.",
         "data": {
           "categories": "Categorieën"
         },
@@ -103,7 +106,7 @@
       },
       "category_users": {
         "title": "Gebruikers per categorie",
-        "description": "Kies per categorie de Home Assistant-gebruikers die de documenten mogen zien."
+        "description": "Kies per categorie de gebruikers van Home Assistant die de documenten mogen zien. Beheerders zien elke categorie zolang Beheerders zien alle categorieën aanstaat. Wie het item in de zijbalk ziet, kies je apart onder Toegangstag en zichtbaarheid."
       },
       "devices": {
         "title": "Toestellen",
@@ -126,9 +129,11 @@
     },
     "abort": {
       "not_loaded": "De integratie is niet geladen. Controleer eerst de verbinding met Paperless.",
-      "cannot_connect": "Kan geen verbinding maken met Paperless.",
-      "no_categories": "Kies eerst categorieën (Categorieën en gebruikers).",
-      "no_users": "Nog geen enkele gebruiker mag een categorie zien. Kies eerst gebruikers onder Categorieën en gebruikers."
+      "cannot_connect": "Kan geen verbinding maken met Paperless."
+    },
+    "error": {
+      "no_categories": "Kies eerst categorieën (Categorieën).",
+      "no_users": "Nog geen enkele gebruiker mag een categorie zien. Kies eerst gebruikers onder Gebruikers per categorie."
     }
   },
   "exceptions": {

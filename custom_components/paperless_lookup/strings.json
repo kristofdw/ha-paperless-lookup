@@ -70,11 +70,14 @@
     "step": {
       "init": {
         "title": "Paperless Lookup options",
+        "description": "Choose what to change. After each step you return to this menu. Changes are only stored with Save and close; closing with X discards them.",
         "menu_options": {
           "access": "Access tag and visibility",
-          "categories": "Categories and users",
+          "categories": "Categories",
+          "category_users": "Users per category",
           "devices": "Devices",
-          "follow_reads": "Follow who opens documents"
+          "follow_reads": "Follow who opens documents",
+          "save": "Save and close"
         }
       },
       "access": {
@@ -93,7 +96,7 @@
       },
       "categories": {
         "title": "Categories",
-        "description": "A category is a Paperless document type. Documents of other types, or without a type, are not visible.",
+        "description": "A category is a Paperless document type. Documents of other types, or without a type, are not visible. Next, choose the users per category.",
         "data": {
           "categories": "Categories"
         },
@@ -103,7 +106,7 @@
       },
       "category_users": {
         "title": "Users per category",
-        "description": "Choose, per category, the Home Assistant users that may see its documents."
+        "description": "Choose, per category, the Home Assistant users that may see its documents. Administrators see every category while Administrators see all categories is on. Who sees the sidebar item is set separately under Access tag and visibility."
       },
       "devices": {
         "title": "Devices",
@@ -126,9 +129,11 @@
     },
     "abort": {
       "not_loaded": "The integration is not loaded. Check the connection to Paperless first.",
-      "cannot_connect": "Failed to connect to Paperless.",
-      "no_categories": "Choose categories first (Categories and users).",
-      "no_users": "No user may see a category yet. Choose users under Categories and users first."
+      "cannot_connect": "Failed to connect to Paperless."
+    },
+    "error": {
+      "no_categories": "Choose categories first (Categories).",
+      "no_users": "No user may see a category yet. Choose users under Users per category first."
     }
   },
   "exceptions": {

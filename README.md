@@ -167,7 +167,8 @@ supported.
 ## 4. Choose who sees what (options)
 
 *Settings → Devices & services → Paperless Lookup →* **Configure**. The options are a menu; every choice
-in the lists comes live from Paperless.
+in the lists comes live from Paperless. After each step you return to the menu. Changes are only stored
+with **Save and close**; closing the dialog with ✕ discards them.
 
 - **Access tag and visibility**
   - *Access tag*: the tag that releases documents (without one, nothing is visible).
@@ -175,12 +176,14 @@ in the lists comes live from Paperless.
     category too.
   - *Users who see Paperless Lookup in the sidebar*: choose who gets the menu item. With nobody chosen,
     everyone gets it. This only concerns the menu item: which documents someone may see (also on
-    dashboard cards) is set per category below.
-- **Categories and users**
-  - First choose which document types are categories in Home Assistant. Documents of other types are
-    not visible.
-  - Then choose, per category, the Home Assistant users that may see it. Example: *Manual* for
-    everyone, *Receipt* and *Invoice* only for two users, nothing for a wall tablet's user.
+    dashboard cards) is set under *Users per category*. A user with the menu item but without any
+    category sees an empty panel.
+- **Categories**: choose which document types are categories in Home Assistant. Documents of other
+  types are not visible. Afterwards the dialog continues with *Users per category*.
+- **Users per category**: choose, per category, the Home Assistant users that may see it. Example:
+  *Manual* for everyone, *Receipt* and *Invoice* only for two users, nothing for a wall tablet's user.
+  Administrators see every category while *Administrators see all categories* is on, so they need not
+  be chosen.
 - **Devices**
   - *Device categories*: the categories that are linked to devices by model (usually *Manual*; a
     *Warranty* category works too).
@@ -191,7 +194,7 @@ in the lists comes live from Paperless.
   documents are written to the Home Assistant logbook (see
   [Follow who opens what](#follow-who-opens-what)). Off by default.
 
-Only Home Assistant administrators can open these options. The integration reloads after every change.
+Only Home Assistant administrators can open these options. The integration reloads after Save and close.
 
 ### Follow who opens what
 
@@ -347,8 +350,9 @@ Removing an automatic link (✕ on the card) is remembered: the document stays u
 **I see no documents (or not all)**
 
 1. Do the documents have the access tag, and is that tag chosen in *Options → Access tag*?
-2. Is their document type a category (*Options → Categories and users*), and does your user have access
-   to it (or are you an administrator with *Administrators see all categories* on)?
+2. Is their document type a category (*Options → Categories*), and does your user have access to it
+   under *Options → Users per category* (or are you an administrator with *Administrators see all
+   categories* on)? Being chosen for the sidebar item is not enough.
 3. Can the Paperless user see them? Log in to Paperless as that user (step 1.4, object permissions).
    A tag or document type it cannot see does not appear in the options lists either.
 4. New or changed documents appear in search right away. For device links and the filter lists, wait

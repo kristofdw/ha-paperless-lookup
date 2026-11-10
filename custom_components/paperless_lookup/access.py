@@ -10,8 +10,9 @@ Rules:
   does not leak.
 """
 
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.auth.models import User
 from homeassistant.core import HomeAssistant
@@ -56,19 +57,24 @@ def async_get_entry(hass: HomeAssistant) -> PaperlessLookupConfigEntry:
     return entries[0]
 
 
-def user_access(entry: PaperlessLookupConfigEntry, user: User | None) -> UserAccess:
-    """Return the categories a user may see."""
-    if user is None or not user.is_active or user.system_generated:
-        return UserAccess(categories=frozenset(), is_admin=False)
-    options = entry.options
+def visible_categories(options: Mapping[str, Any], user: User) -> frozenset[int]:
+    """Return the categories an active, non-system user may see with these options.
+
+    Also used by the options flow with options that are not stored yet.
+    """
     categories: dict[str, list[str]] = options.get(CONF_CATEGORIES, {})
     if user.is_admin and options.get(CONF_ADMINS_ALWAYS, DEFAULT_ADMINS_ALWAYS):
-        allowed = frozenset(int(type_id) for type_id in categories)
-    else:
-        allowed = frozenset(
-            int(type_id) for type_id, user_ids in categories.items() if user.id in user_ids
-        )
-    return UserAccess(categories=allowed, is_admin=user.is_admin)
+        return frozenset(int(type_id) for type_id in categories)
+    return frozenset(
+        int(type_id) for type_id, user_ids in categories.items() if user.id in user_ids
+    )
+
+
+def user_access(entry: PaperlessLookupConfigEntry, user: User | None) -> UserAccess:
+    """Return the categories a user may see; inactive and system users get nothing."""
+    if user is None or not user.is_active or user.system_generated:
+        return UserAccess(categories=frozenset(), is_admin=False)
+    return UserAccess(categories=visible_categories(entry.options, user), is_admin=user.is_admin)
 
 
 def get_document(

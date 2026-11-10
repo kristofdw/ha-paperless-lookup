@@ -1,6 +1,6 @@
 [project]
 name = "ha-paperless-lookup"
-version = "0.0.1"
+version = "0.1.0"
 description = "Paperless Lookup for Home Assistant: look up Paperless-ngx documents from Home Assistant."
 readme = "README.md"
 license = "Apache-2.0"

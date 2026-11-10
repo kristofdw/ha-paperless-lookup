@@ -23,5 +23,5 @@
   "issue_tracker": "https://github.com/kristofdw/ha-paperless-lookup/issues",
   "requirements": [],
   "single_config_entry": true,
-  "version": "0.0.1"
+  "version": "0.1.0"
 }

@@ -1,6 +1,6 @@
 # Paperless Lookup for Home Assistant
 
-> **Work in progress.** Usable for testing; expect changes until the first release.
+*[Nederlands](docs/README.nl.md)*
 
 A custom integration, installed through the [Marketplace](https://www.home-assistant.io/integrations/marketplace/)
 (formerly HACS), that makes selected [Paperless-ngx](https://docs.paperless-ngx.com/)
@@ -116,9 +116,8 @@ Marketplace catalog yet, so add it from its GitHub link:
    The Marketplace asks you to connect GitHub first if you have not done that yet. If it asks for the
    type, choose **Integration**.
 3. Open **Paperless Lookup for Home Assistant** and install it. The Marketplace warns that it is made and
-   supported by its author, not by the Home Assistant project.
-   (There is no release yet, so the Marketplace installs the latest commit of the main branch and shows a
-   commit hash as the version.)
+   supported by its author, not by the Home Assistant project. The Marketplace installs the latest
+   release; see the [changelog](CHANGELOG.md) for what changed.
 4. **Restart Home Assistant** when the Marketplace asks for it (a repair offers the restart), or via
    *Settings → System → ⏻ → Restart Home Assistant*.
 
@@ -265,8 +264,9 @@ area: kitchen
 show_thumbnails: false
 ```
 
-The card only shows documents of categories the viewing user may see. Administrators can remove a link
-with ✕.
+The device ID, entity and area (an area ID) above are examples: replace them with your own, or let the
+visual editor fill them in. The card only shows documents of categories the viewing user may see.
+Administrators can remove a link with ✕.
 
 ## 6. Link manuals to devices
 
@@ -318,6 +318,8 @@ Removing an automatic link (✕ on the card) is remembered: the document stays u
 - **Read-only**: the integration never changes anything in Paperless. Paperless' audit log records
   changes, not reads; to follow which Home Assistant user opens what, use the
   option [Follow who opens documents](#follow-who-opens-what).
+
+To report a security problem, see [SECURITY.md](SECURITY.md).
 
 ## Known limitations
 
@@ -392,9 +394,9 @@ versions, permissions and counts, without token, URL, names or titles. Attach it
 
 ## Development
 
-See [`AGENTS.md`](AGENTS.md) for the build and test commands and [`dev/README.md`](dev/README.md) for the
-local test environment (Home Assistant + Paperless-ngx with synthetic data). In short (Python in Linux/WSL,
-frontend with node 24):
+See [CONTRIBUTING.md](CONTRIBUTING.md) for issues and pull requests, [`AGENTS.md`](AGENTS.md) for the
+build and test commands and [`dev/README.md`](dev/README.md) for the local test environment (Home
+Assistant + Paperless-ngx with synthetic data). In short (Python in Linux/WSL, frontend with node 24):
 
 ```bash
 bash script/uv sync

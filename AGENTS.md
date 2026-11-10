@@ -41,6 +41,15 @@ linked to devices, receipts/invoices can be searched from a phone, and access is
   version that Home Assistant release requires. Do not install `pytest-homeassistant-custom-component`
   (discontinued, overlapping fixtures).
 
+## Release
+- The version lives in `manifest.json`, `pyproject.toml` and `frontend/package.json` (plus both lock files);
+  `tests/test_release.py` checks that they agree and that `CHANGELOG.md` has a section for it.
+- Steps: move *Unreleased* in `CHANGELOG.md` to a new `## [x.y.z] - date` section, bump the versions,
+  commit, then publish a GitHub release with tag `vx.y.z` and the changelog section as notes. The Release
+  workflow fails when the tag does not match the manifest. The Marketplace shows the release tag as the
+  version and offers it under *Settings → Updates*.
+- Keep the `README.md` and `docs/README.nl.md` in step: change the Dutch guide with the English one.
+
 ## Conventions
 - Code, docstrings, README, commit messages and this file in **English**.
 - Follow the Home Assistant custom integration guidelines and the Integration Quality Scale (Silver or

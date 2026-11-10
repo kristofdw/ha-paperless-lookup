@@ -1,7 +1,7 @@
 {
   "name": "paperless-lookup-frontend",
   "private": true,
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Panel and card of Paperless Lookup for Home Assistant",
   "license": "Apache-2.0",
   "type": "module",

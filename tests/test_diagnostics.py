@@ -9,7 +9,11 @@ from homeassistant.core import HomeAssistant
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
-from custom_components.paperless_lookup.const import CONF_CATEGORIES, CONF_PANEL_USERS
+from custom_components.paperless_lookup.const import (
+    CONF_CATEGORIES,
+    CONF_PANEL_USERS,
+    CONF_READ_LOG,
+)
 from custom_components.paperless_lookup.diagnostics import async_get_config_entry_diagnostics
 
 from .conftest import PAPERLESS_USERNAME, TEST_TOKEN, load_json_fixture, mock_paperless
@@ -29,6 +33,7 @@ async def test_diagnostics_redacted(
             **mock_config_entry.options,
             CONF_CATEGORIES: {"1": ["ha-user-id-a", "ha-user-id-b"], "2": []},
             CONF_PANEL_USERS: ["ha-user-id-c"],
+            CONF_READ_LOG: {"2": ["ha-user-id-d"]},
         },
     )
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -43,6 +48,7 @@ async def test_diagnostics_redacted(
         PAPERLESS_USERNAME,
         "ha-user-id-a",
         "ha-user-id-c",
+        "ha-user-id-d",
     ):
         assert secret not in text
     entry = diagnostics["entry"]
@@ -56,6 +62,7 @@ async def test_diagnostics_redacted(
     }
     assert entry["options"][CONF_CATEGORIES] == {"1": 2, "2": 0}
     assert entry["options"][CONF_PANEL_USERS] == 1
+    assert entry["options"][CONF_READ_LOG] == {"2": 1}
     assert diagnostics["paperless"]["server_version"] == "3.3.4"
     assert diagnostics["paperless"]["api_version"] == 10
     assert diagnostics["paperless"]["user"]["has_write_access"] is False

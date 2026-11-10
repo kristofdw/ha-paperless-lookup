@@ -19,6 +19,9 @@ CONF_PANEL_USERS: Final = "panel_users"
 CONF_DEVICE_CATEGORIES: Final = "device_categories"  # Document type ids (subset of categories).
 CONF_MODEL_FIELD: Final = "model_field"  # Paperless custom field id, or None.
 CONF_ZIGBEE2MQTT_FALLBACK: Final = "zigbee2mqtt_fallback"
+# {"<document type id>": [Home Assistant user ids]}: whose previews and downloads in that category
+# are written to the logbook. Missing or empty means nothing is logged.
+CONF_READ_LOG: Final = "read_log"
 
 # Defaults, matched case-insensitively against the names in Paperless when the entry is created.
 DEFAULT_ACCESS_TAG_NAME: Final = "HA"

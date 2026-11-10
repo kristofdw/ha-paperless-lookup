@@ -1,6 +1,6 @@
 """The Paperless Lookup integration."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from homeassistant.auth import EVENT_USER_ADDED
 from homeassistant.config_entries import ConfigEntry
@@ -12,6 +12,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
 from .api import (
+    FileKind,
     PaperlessAuthError,
     PaperlessClient,
     PaperlessError,
@@ -35,6 +36,7 @@ from .panel import (
     async_remove_panel,
     async_sync_panel_visibility,
 )
+from .read_log import async_service_device
 from .store import LinkStore
 from .views import PaperlessDocumentView
 from .websocket_api import async_register as async_register_websocket_api
@@ -53,6 +55,10 @@ class PaperlessLookupData:
     user: PaperlessUser
     coordinator: PaperlessLookupCoordinator
     store: LinkStore
+    # Service device that the logbook entries of document reads belong to.
+    device_id: str
+    # (user id, document id, file kind) -> monotonic time of the last logged read.
+    read_log_seen: dict[tuple[str, int, FileKind], float] = field(default_factory=dict)
 
 
 type PaperlessLookupConfigEntry = ConfigEntry[PaperlessLookupData]
@@ -135,7 +141,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: PaperlessLookupConfigEnt
     entry.async_on_unload(coordinator.async_add_listener(lambda: None))
 
     entry.runtime_data = PaperlessLookupData(
-        client=client, user=user, coordinator=coordinator, store=store
+        client=client,
+        user=user,
+        coordinator=coordinator,
+        store=store,
+        device_id=async_service_device(hass, entry),
     )
 
     @callback

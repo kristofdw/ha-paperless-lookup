@@ -28,6 +28,7 @@ from .access import (
     user_access,
 )
 from .api import FileKind, PaperlessError, PaperlessFileTooLargeError, PaperlessNotFoundError
+from .read_log import async_log_read
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,7 +97,8 @@ class PaperlessDocumentView(HomeAssistantView):
             DocumentNotFoundError: The user may not see the document (now).
         """
         entry = async_get_entry(self.hass)
-        access = user_access(entry, request[KEY_HASS_USER])
+        user = request[KEY_HASS_USER]
+        access = user_access(entry, user)
         get_document(entry, access, doc_id)
         coordinator = entry.runtime_data.coordinator
         client = coordinator.client
@@ -110,6 +112,7 @@ class PaperlessDocumentView(HomeAssistantView):
         async with client.async_open_file(doc_id, kind, max_bytes=MAX_FILE_BYTES[kind]) as file:
             if file.content_type not in ALLOWED_CONTENT_TYPES[kind]:
                 return web.Response(status=HTTPStatus.UNSUPPORTED_MEDIA_TYPE)
+            async_log_read(self.hass, entry, user, live, kind)
             response = web.StreamResponse(
                 headers={
                     "Content-Type": file.content_type,

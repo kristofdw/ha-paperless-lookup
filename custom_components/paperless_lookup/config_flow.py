@@ -49,6 +49,7 @@ from .const import (
     CONF_MODEL_FIELD,
     CONF_PANEL_USERS,
     CONF_PAPERLESS_USER_ID,
+    CONF_READ_LOG,
     CONF_ZIGBEE2MQTT_FALLBACK,
     DEFAULT_ADMINS_ALWAYS,
     DEFAULT_ZIGBEE2MQTT_FALLBACK,
@@ -285,7 +286,7 @@ class PaperlessLookupConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class PaperlessLookupOptionsFlow(OptionsFlowWithReload):
-    """Options: access tag, categories and users, devices."""
+    """Options: access tag, categories and users, devices, read log."""
 
     def __init__(self) -> None:
         """Initialize the options flow."""
@@ -303,7 +304,7 @@ class PaperlessLookupOptionsFlow(OptionsFlowWithReload):
         if self.config_entry.state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="not_loaded")
         return self.async_show_menu(
-            step_id="init", menu_options=["access", "categories", "devices"]
+            step_id="init", menu_options=["access", "categories", "devices", "read_log"]
         )
 
     async def async_step_access(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
@@ -376,12 +377,7 @@ class PaperlessLookupOptionsFlow(OptionsFlowWithReload):
                 }
             )
         user_selector, user_ids = await self._async_user_selector()
-        self._user_field_keys = {}
-        for type_id in self._selected_categories:
-            key = self._document_types[type_id]
-            if key in self._user_field_keys:
-                key = f"{key} ({type_id})"
-            self._user_field_keys[key] = type_id
+        self._user_field_keys = _field_keys(self._selected_categories, self._document_types)
         categories = self._categories()
         schema = probatio.Schema(
             {probatio.Optional(key): user_selector for key in self._user_field_keys}
@@ -446,6 +442,43 @@ class PaperlessLookupOptionsFlow(OptionsFlowWithReload):
             step_id="devices", data_schema=self.add_suggested_values_to_schema(schema, suggested)
         )
 
+    async def async_step_read_log(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Choose, per category, the users whose previews and downloads go to the logbook."""
+        if user_input is not None:
+            return self._async_save(
+                {
+                    CONF_READ_LOG: {
+                        str(type_id): sorted(users)
+                        for key, type_id in self._user_field_keys.items()
+                        if (users := user_input.get(key))
+                    }
+                }
+            )
+        categories = self._categories()
+        if not categories:
+            return self.async_abort(reason="no_categories")
+        try:
+            document_types = await self._client.async_get_document_types()
+        except PaperlessError:
+            return self.async_abort(reason="cannot_connect")
+        names = {doc_type.id: doc_type.name for doc_type in document_types}
+        type_ids = sorted(int(key) for key in categories if int(key) in names)
+        user_selector, user_ids = await self._async_user_selector()
+        self._user_field_keys = _field_keys(type_ids, names)
+        read_log = self.config_entry.options.get(CONF_READ_LOG, {})
+        schema = probatio.Schema(
+            {probatio.Optional(key): user_selector for key in self._user_field_keys}
+        )
+        suggested = {
+            key: [uid for uid in read_log.get(str(type_id), []) if uid in user_ids]
+            for key, type_id in self._user_field_keys.items()
+        }
+        return self.async_show_form(
+            step_id="read_log", data_schema=self.add_suggested_values_to_schema(schema, suggested)
+        )
+
     async def _async_user_selector(self) -> tuple[SelectSelector, set[str]]:
         """Return a multi-select of the Home Assistant users, and their ids."""
         users = [
@@ -463,14 +496,24 @@ class PaperlessLookupOptionsFlow(OptionsFlowWithReload):
         return dict(self.config_entry.options.get(CONF_CATEGORIES, {}))
 
     def _async_save_categories(self, categories: dict[str, list[str]]) -> ConfigFlowResult:
-        """Save the categories and drop device categories that are no longer categories."""
+        """Save the categories and drop device categories and read logs of removed categories."""
+        options = self.config_entry.options
         device_categories = [
             type_id
-            for type_id in self.config_entry.options.get(CONF_DEVICE_CATEGORIES, [])
+            for type_id in options.get(CONF_DEVICE_CATEGORIES, [])
             if str(type_id) in categories
         ]
+        read_log = {
+            type_id: users
+            for type_id, users in options.get(CONF_READ_LOG, {}).items()
+            if type_id in categories
+        }
         return self._async_save(
-            {CONF_CATEGORIES: categories, CONF_DEVICE_CATEGORIES: device_categories}
+            {
+                CONF_CATEGORIES: categories,
+                CONF_DEVICE_CATEGORIES: device_categories,
+                CONF_READ_LOG: read_log,
+            }
         )
 
     def _async_save(self, changes: dict[str, Any]) -> ConfigFlowResult:
@@ -481,6 +524,17 @@ class PaperlessLookupOptionsFlow(OptionsFlowWithReload):
 def _without_token(values: Mapping[str, Any] | None) -> dict[str, Any]:
     """Return form values without the token: it is never sent back to the frontend."""
     return {key: value for key, value in (values or {}).items() if key != CONF_API_TOKEN}
+
+
+def _field_keys(type_ids: list[int], names: dict[int, str]) -> dict[str, int]:
+    """Return one form field per document type, named after it (with the id when names clash)."""
+    keys: dict[str, int] = {}
+    for type_id in type_ids:
+        key = names[type_id]
+        if key in keys:
+            key = f"{key} ({type_id})"
+        keys[key] = type_id
+    return keys
 
 
 def _select(objects: list[PaperlessObject], *, multiple: bool = False) -> SelectSelector:

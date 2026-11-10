@@ -169,5 +169,10 @@
       "title": "Paperless-toegangstag niet beschikbaar",
       "description": "Er zijn geen documenten zichtbaar in Home Assistant: er is geen toegangstag gekozen, of de Paperless-gebruiker kan de tag niet zien. Maak de tag aan in Paperless of deel hem met die gebruiker. Of kies een andere onder Instellingen > Apparaten & diensten > Paperless Lookup > Configureren > Toegangstag en zichtbaarheid. Deze melding verdwijnt bij de volgende verversing of als je de integratie herlaadt."
     }
+  },
+  "common": {
+    "document_opened": "opende Paperless-document {document_id}",
+    "document_downloaded": "downloadde Paperless-document {document_id}",
+    "unknown_user": "Onbekende gebruiker"
   }
 }

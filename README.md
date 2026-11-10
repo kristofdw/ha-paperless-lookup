@@ -211,7 +211,8 @@ Each preview or download of a followed category then gives a logbook entry such 
 Paperless document 5 (Receipt)"*: the user, the time, the document number and the category, never the
 title (the logbook is stored in the Home Assistant database). Thumbnails are not logged, and opening the
 same file again within a minute counts once. A file that the browser still has in its cache (up to 5
-minutes) does not reach Home Assistant again, so it is not logged again either.
+minutes) does not reach Home Assistant again, so it is not logged again either. The text is in the
+language of Home Assistant (*Settings → System → General*), not in each user's own language.
 
 To see only these entries, open *Settings → Devices & services → Paperless Lookup →* the device
 **Paperless Lookup** (its logbook card), or filter the logbook on that device. The document number is

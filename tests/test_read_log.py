@@ -2,19 +2,26 @@
 
 from datetime import timedelta
 from http import HTTPStatus
+import json
+from pathlib import Path
 from time import monotonic
 from typing import Any
 
 from homeassistant.components.http.auth import async_sign_path
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.translation import async_get_translations
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, MockUser, async_capture_events
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pytest_homeassistant.typing import ClientSessionGenerator
 
 from custom_components.paperless_lookup.const import CONF_FOLLOW_READS, DOMAIN
-from custom_components.paperless_lookup.logbook import Describer, async_describe_events
+from custom_components.paperless_lookup.logbook import (
+    FALLBACK_TEXTS,
+    Describer,
+    async_describe_events,
+)
 from custom_components.paperless_lookup.read_log import EVENT_DOCUMENT_OPENED, REPEAT_SECONDS
 
 from .conftest import TEST_URL
@@ -32,6 +39,7 @@ from .security import (
 )
 
 PDF = b"%PDF-1.4 synthetic test document\n"
+STRINGS = Path(__file__).parents[1] / "custom_components" / "paperless_lookup" / "strings.json"
 
 
 @pytest.fixture
@@ -227,3 +235,28 @@ async def test_logbook_description(
     describe = _describer(hass)
 
     assert describe(Event(EVENT_DOCUMENT_OPENED, data)) == expected
+
+
+async def test_logbook_description_translated(hass: HomeAssistant) -> None:
+    """Test that the logbook text follows the language of Home Assistant."""
+    hass.config.language = "nl"
+    await async_get_translations(hass, "nl", "common", {DOMAIN})
+    describe = _describer(hass)
+
+    opened = {"document_id": 5, "category": "Receipt", "kind": "preview", "user_name": None}
+    downloaded = {"document_id": 8, "kind": "download", "user_name": "Sam"}
+
+    assert describe(Event(EVENT_DOCUMENT_OPENED, opened)) == {
+        "name": "Onbekende gebruiker",
+        "message": "opende Paperless-document 5 (Receipt)",
+    }
+    assert describe(Event(EVENT_DOCUMENT_OPENED, downloaded))["message"] == (
+        "downloadde Paperless-document 8"
+    )
+
+
+def test_fallback_texts_match_strings() -> None:
+    """Test that the texts used before translations load are the English strings."""
+    strings = json.loads(STRINGS.read_text(encoding="utf-8"))
+
+    assert strings["common"] == FALLBACK_TEXTS

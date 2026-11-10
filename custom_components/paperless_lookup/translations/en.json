@@ -169,5 +169,10 @@
       "title": "Paperless access tag not available",
       "description": "No documents are visible in Home Assistant: no access tag is chosen, or the Paperless user cannot see it. In Paperless, create the tag or share it with that user. Or choose another one under Settings > Devices & services > Paperless Lookup > Configure > Access tag and visibility. This message disappears at the next refresh, or when you reload the integration."
     }
+  },
+  "common": {
+    "document_opened": "opened Paperless document {document_id}",
+    "document_downloaded": "downloaded Paperless document {document_id}",
+    "unknown_user": "Unknown user"
   }
 }

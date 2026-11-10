@@ -20,7 +20,7 @@ from .api import (
     PaperlessUnsupportedVersionError,
     PaperlessUser,
 )
-from .const import CONF_PANEL_USERS, CONF_PAPERLESS_USER_ID, DOMAIN
+from .const import CONF_FOLLOW_READS, CONF_PANEL_USERS, CONF_PAPERLESS_USER_ID, DOMAIN
 from .coordinator import PaperlessLookupCoordinator
 from .helpers import create_client, missing_permissions
 from .issues import (
@@ -45,6 +45,8 @@ PLATFORMS: list[Platform] = []
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 DATA_MODULE_URL: HassKey[str] = HassKey(f"{DOMAIN}_module_url")
 _LEGACY_REFRESH_INTERVAL = "refresh_interval"  # Option removed in config entry version 1.2.
+# {"<document type id>": [user ids]}, replaced in config entry version 1.3 by follow_reads per user.
+_LEGACY_READ_LOG = "read_log"
 
 
 @dataclass(slots=True)
@@ -79,6 +81,17 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PaperlessLookupConfigE
             key: value for key, value in entry.options.items() if key != _LEGACY_REFRESH_INTERVAL
         }
         hass.config_entries.async_update_entry(entry, options=options, minor_version=2)
+    if entry.minor_version < 3:
+        options = dict(entry.options)
+        follow: dict[str, set[int]] = {}
+        for type_id, user_ids in options.pop(_LEGACY_READ_LOG, {}).items():
+            for user_id in user_ids:
+                follow.setdefault(user_id, set()).add(int(type_id))
+        if follow:
+            options[CONF_FOLLOW_READS] = {
+                user_id: sorted(type_ids) for user_id, type_ids in follow.items()
+            }
+        hass.config_entries.async_update_entry(entry, options=options, minor_version=3)
     return True
 
 

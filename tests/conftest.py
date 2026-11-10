@@ -112,7 +112,7 @@ def mock_config_entry() -> MockConfigEntry:
     """Return a config entry for Paperless Lookup."""
     return MockConfigEntry(
         domain=DOMAIN,
-        minor_version=2,
+        minor_version=3,
         title=PAPERLESS_USERNAME,
         unique_id=f"{TEST_URL}#{PAPERLESS_USER_ID}",
         data=dict(MOCK_CONFIG),

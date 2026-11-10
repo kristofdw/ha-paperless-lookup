@@ -74,7 +74,7 @@
           "access": "Toegangstag en zichtbaarheid",
           "categories": "Categorieën en gebruikers",
           "devices": "Toestellen",
-          "read_log": "Leesacties"
+          "follow_reads": "Bijhouden wie documenten opent"
         }
       },
       "access": {
@@ -119,15 +119,16 @@
           "zigbee2mqtt_fallback": "Link naar de toestelpagina van Zigbee2MQTT als een Zigbee-toestel geen handleiding heeft."
         }
       },
-      "read_log": {
-        "title": "Leesacties",
-        "description": "Kies per categorie de gebruikers van wie het openen en downloaden van documenten in het logboek van Home Assistant komt. Laat een categorie leeg om er niets van te loggen. Het logboek toont de gebruiker, het tijdstip, het documentnummer en de categorie, nooit de titel. Miniaturen worden niet gelogd, en een bestand dat binnen een minuut opnieuw geopend wordt, telt één keer. Filter het logboek op het apparaat Paperless Lookup om alleen deze regels te zien."
+      "follow_reads": {
+        "title": "Bijhouden wie documenten opent",
+        "description": "Kies per gebruiker de categorieën die je wilt volgen. Telkens die gebruiker een document van zo'n categorie opent of downloadt, komt er een regel in het logboek van Home Assistant met de gebruiker, het tijdstip, het documentnummer en de categorie (nooit de titel). Miniaturen tellen niet mee, en hetzelfde bestand binnen een minuut opnieuw openen telt één keer. Elke gebruiker krijgt alleen de categorieën die hij mag zien.\n\nNiet in de lijst, omdat ze geen enkele categorie mogen zien: {without_access}.\n\nWil je alleen deze regels zien, filter het logboek dan op het apparaat Paperless Lookup."
       }
     },
     "abort": {
       "not_loaded": "De integratie is niet geladen. Controleer eerst de verbinding met Paperless.",
       "cannot_connect": "Kan geen verbinding maken met Paperless.",
-      "no_categories": "Kies eerst categorieën (Categorieën en gebruikers)."
+      "no_categories": "Kies eerst categorieën (Categorieën en gebruikers).",
+      "no_users": "Nog geen enkele gebruiker mag een categorie zien. Kies eerst gebruikers onder Categorieën en gebruikers."
     }
   },
   "exceptions": {

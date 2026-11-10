@@ -13,7 +13,7 @@ from pytest_homeassistant.common import MockConfigEntry, MockUser, async_capture
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pytest_homeassistant.typing import ClientSessionGenerator
 
-from custom_components.paperless_lookup.const import CONF_READ_LOG, DOMAIN
+from custom_components.paperless_lookup.const import CONF_FOLLOW_READS, DOMAIN
 from custom_components.paperless_lookup.logbook import Describer, async_describe_events
 from custom_components.paperless_lookup.read_log import EVENT_DOCUMENT_OPENED, REPEAT_SECONDS
 
@@ -53,12 +53,7 @@ async def setup(
         aioclient_mock,
         mock_config_entry,
         users,
-        **{
-            CONF_READ_LOG: {
-                str(RECEIPT): [users.reader.id],
-                str(INVOICE): [users.admin.id],
-            }
-        },
+        **{CONF_FOLLOW_READS: {users.reader.id: [RECEIPT], users.admin.id: [INVOICE]}},
     )
     for doc_id, document_type in (
         (RECEIPT_DOC, RECEIPT),

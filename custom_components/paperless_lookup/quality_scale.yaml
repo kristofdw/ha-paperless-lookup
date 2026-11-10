@@ -63,7 +63,7 @@ rules:
   # Gold
   devices:
     status: done
-    comment: One service device per entry, which the read log entries in the logbook belong to.
+    comment: One service device per entry, which the logbook entries of followed reads belong to.
   diagnostics: done
   discovery:
     status: exempt

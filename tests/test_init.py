@@ -10,7 +10,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from custom_components.paperless_lookup import PaperlessLookupData
-from custom_components.paperless_lookup.const import DOMAIN
+from custom_components.paperless_lookup.const import CONF_FOLLOW_READS, DOMAIN
 
 from .conftest import (
     DEFAULT_OPTIONS,
@@ -190,16 +190,19 @@ async def test_migrate_removes_refresh_interval(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    assert entry.minor_version == 2
+    assert entry.minor_version == 3
     assert entry.options == DEFAULT_OPTIONS
 
 
-async def test_migrate_keeps_newer_minor_version(
+async def test_migrate_read_log_to_follow_reads(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test that an entry of a newer minor version is not changed."""
+    """Test that the former read log per category becomes a list of categories per user."""
     entry = MockConfigEntry(
-        domain=DOMAIN, minor_version=3, data=dict(MOCK_CONFIG), options=dict(DEFAULT_OPTIONS)
+        domain=DOMAIN,
+        minor_version=2,
+        data=dict(MOCK_CONFIG),
+        options={**DEFAULT_OPTIONS, "read_log": {"2": ["user-a", "user-b"], "3": ["user-a"]}},
     )
     mock_paperless(aioclient_mock)
     entry.add_to_hass(hass)
@@ -208,6 +211,24 @@ async def test_migrate_keeps_newer_minor_version(
     await hass.async_block_till_done()
 
     assert entry.minor_version == 3
+    assert "read_log" not in entry.options
+    assert entry.options[CONF_FOLLOW_READS] == {"user-a": [2, 3], "user-b": [2]}
+
+
+async def test_migrate_keeps_newer_minor_version(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test that an entry of a newer minor version is not changed."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, minor_version=4, data=dict(MOCK_CONFIG), options=dict(DEFAULT_OPTIONS)
+    )
+    mock_paperless(aioclient_mock)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.minor_version == 4
     assert entry.state is ConfigEntryState.LOADED
 
 

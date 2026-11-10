@@ -74,7 +74,7 @@
           "access": "Access tag and visibility",
           "categories": "Categories and users",
           "devices": "Devices",
-          "read_log": "Read log"
+          "follow_reads": "Follow who opens documents"
         }
       },
       "access": {
@@ -119,15 +119,16 @@
           "zigbee2mqtt_fallback": "Link to the Zigbee2MQTT device page when a Zigbee device has no manual."
         }
       },
-      "read_log": {
-        "title": "Read log",
-        "description": "Choose, per category, the users whose previews and downloads are written to the Home Assistant logbook. Leave a category empty to log nothing for it. The logbook shows the user, the time, the document number and the category, never the title. Thumbnails are not logged, and a file opened again within a minute is logged once. Filter the logbook on the device Paperless Lookup to see only these entries."
+      "follow_reads": {
+        "title": "Follow who opens documents",
+        "description": "Per user, choose the categories to follow. Every time that user opens or downloads a document of such a category, the Home Assistant logbook gets an entry with the user, the time, the document number and the category (never the title). Thumbnails are not counted, and the same file opened again within a minute counts once. Each user only gets the categories they may see.\n\nNot listed, because they may not see any category: {without_access}.\n\nTo see only these entries, filter the logbook on the device Paperless Lookup."
       }
     },
     "abort": {
       "not_loaded": "The integration is not loaded. Check the connection to Paperless first.",
       "cannot_connect": "Failed to connect to Paperless.",
-      "no_categories": "Choose categories first (Categories and users)."
+      "no_categories": "Choose categories first (Categories and users).",
+      "no_users": "No user may see a category yet. Choose users under Categories and users first."
     }
   },
   "exceptions": {

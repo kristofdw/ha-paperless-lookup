@@ -15,9 +15,9 @@ from custom_components.paperless_lookup.const import (
     CONF_ADMINS_ALWAYS,
     CONF_CATEGORIES,
     CONF_DEVICE_CATEGORIES,
+    CONF_FOLLOW_READS,
     CONF_MODEL_FIELD,
     CONF_PANEL_USERS,
-    CONF_READ_LOG,
     CONF_ZIGBEE2MQTT_FALLBACK,
 )
 
@@ -40,7 +40,7 @@ async def open_step(hass: HomeAssistant, entry: MockConfigEntry, step: str) -> C
     """Open the options menu and choose a step."""
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["type"] is FlowResultType.MENU
-    assert result["menu_options"] == ["access", "categories", "devices", "read_log"]
+    assert result["menu_options"] == ["access", "categories", "devices", "follow_reads"]
     return await hass.config_entries.options.async_configure(
         result["flow_id"], {"next_step_id": step}
     )
@@ -286,7 +286,7 @@ async def test_devices_only_string_fields(
         ("access", "tags"),
         ("categories", "document_types"),
         ("devices", "custom_fields"),
-        ("read_log", "document_types"),
+        ("follow_reads", "document_types"),
     ],
 )
 async def test_cannot_connect(
@@ -307,93 +307,143 @@ async def test_cannot_connect(
     assert result["reason"] == "cannot_connect"
 
 
-async def test_read_log(
+def name_users(admin: MockUser, reader: MockUser) -> None:
+    """Give the test users distinct names (both are called "Mock User")."""
+    admin.name = "Admin"
+    reader.name = "Reader"
+
+
+async def test_follow_reads(
     hass: HomeAssistant,
     loaded_entry: MockConfigEntry,
     hass_admin_user: MockUser,
     hass_read_only_user: MockUser,
 ) -> None:
-    """Test choosing, per category, the users whose reads are logged."""
-    result = await open_step(hass, loaded_entry, "read_log")
-    assert result["step_id"] == "read_log"
-    assert [str(key) for key in result["data_schema"].schema] == [  # type: ignore[union-attr]
-        "Manual",
-        "Receipt",
-        "Invoice",
-        "Warranty",
-        "Bank statement",
-    ]
-    user_options = select_options(result, "Invoice")
-    assert (hass_admin_user.id, hass_admin_user.name) in user_options
-    assert (hass_read_only_user.id, hass_read_only_user.name) in user_options
-    assert suggested(result) == {
-        "Manual": [],
-        "Receipt": [],
-        "Invoice": [],
-        "Warranty": [],
-        "Bank statement": [],
-    }
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        {"Invoice": [hass_read_only_user.id, hass_admin_user.id], "Receipt": [], "Manual": []},
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    # Only categories with users are stored.
-    assert loaded_entry.options[CONF_READ_LOG] == {
-        "3": sorted([hass_read_only_user.id, hass_admin_user.id])
-    }
-
-
-async def test_read_log_suggested(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    loaded_entry: MockConfigEntry,
-    hass_read_only_user: MockUser,
-) -> None:
-    """Test that current users are suggested, without deleted users or deleted types."""
+    """Test choosing, per user, the categories whose opened documents are logged."""
+    name_users(hass_admin_user, hass_read_only_user)
     hass.config_entries.async_update_entry(
         loaded_entry,
         options={
             **loaded_entry.options,
-            CONF_CATEGORIES: {"2": [], "7": []},
-            CONF_READ_LOG: {"2": [hass_read_only_user.id, "deleted-user"], "7": ["x"]},
+            CONF_CATEGORIES: {
+                "1": [hass_read_only_user.id],
+                "2": [hass_read_only_user.id],
+                "3": [],
+            },
         },
     )
     await hass.async_block_till_done()
 
-    result = await open_step(hass, loaded_entry, "read_log")
+    result = await open_step(hass, loaded_entry, "follow_reads")
 
-    # Type 7 no longer exists in Paperless.
-    assert suggested(result) == {"Receipt": [hass_read_only_user.id]}
+    assert result["step_id"] == "follow_reads"
+    fields = [str(key) for key in result["data_schema"].schema]  # type: ignore[union-attr]
+    assert "Admin" in fields
+    assert "Reader" in fields
+    # Each user only gets the categories they may open: administrators all, others their own.
+    assert select_options(result, "Admin") == [("3", "Invoice"), ("1", "Manual"), ("2", "Receipt")]
+    assert select_options(result, "Reader") == [("1", "Manual"), ("2", "Receipt")]
+    assert "Reader" not in result["description_placeholders"]["without_access"]  # type: ignore[index]
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"Reader": ["2", "1"], "Admin": []}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    # Only users with categories are stored.
+    assert loaded_entry.options[CONF_FOLLOW_READS] == {hass_read_only_user.id: [1, 2]}
 
 
-async def test_read_log_without_categories(
+async def test_follow_reads_users_without_access(
+    hass: HomeAssistant,
+    loaded_entry: MockConfigEntry,
+    hass_admin_user: MockUser,
+    hass_read_only_user: MockUser,
+) -> None:
+    """Test that users who may not see any category are named instead of listed."""
+    name_users(hass_admin_user, hass_read_only_user)
+    hass.config_entries.async_update_entry(
+        loaded_entry,
+        options={
+            **loaded_entry.options,
+            CONF_CATEGORIES: {"2": [], "7": [hass_read_only_user.id]},
+            CONF_FOLLOW_READS: {hass_admin_user.id: [2, 7], "deleted-user": [2]},
+        },
+    )
+    await hass.async_block_till_done()
+
+    result = await open_step(hass, loaded_entry, "follow_reads")
+
+    fields = [str(key) for key in result["data_schema"].schema]  # type: ignore[union-attr]
+    assert "Reader" not in fields
+    assert "Reader" in result["description_placeholders"]["without_access"]  # type: ignore[index]
+    # Type 7 no longer exists in Paperless, so it is neither offered nor suggested.
+    assert select_options(result, "Admin") == [("2", "Receipt")]
+    assert suggested(result) == {"Admin": ["2"]}
+
+
+async def test_follow_reads_duplicate_user_names(
+    hass: HomeAssistant,
+    loaded_entry: MockConfigEntry,
+    hass_admin_user: MockUser,
+    hass_read_only_user: MockUser,
+) -> None:
+    """Test that two users with the same name get separate fields."""
+    name_users(hass_admin_user, hass_read_only_user)
+    twin = MockUser(name="Admin").add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        loaded_entry, options={**loaded_entry.options, CONF_CATEGORIES: {"2": [twin.id]}}
+    )
+    await hass.async_block_till_done()
+
+    result = await open_step(hass, loaded_entry, "follow_reads")
+
+    fields = [str(key) for key in result["data_schema"].schema]  # type: ignore[union-attr]
+    assert fields.count("Admin") == 1
+    assert len([key for key in fields if key.startswith("Admin (")]) == 1
+
+
+async def test_follow_reads_without_categories(
     hass: HomeAssistant, loaded_entry: MockConfigEntry
 ) -> None:
-    """Test that the read log needs categories first."""
+    """Test that following needs categories first."""
     hass.config_entries.async_update_entry(
         loaded_entry, options={**loaded_entry.options, CONF_CATEGORIES: {}}
     )
     await hass.async_block_till_done()
 
-    result = await open_step(hass, loaded_entry, "read_log")
+    result = await open_step(hass, loaded_entry, "follow_reads")
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_categories"
 
 
-async def test_removed_category_drops_read_log(
+async def test_follow_reads_without_users(
     hass: HomeAssistant, loaded_entry: MockConfigEntry, hass_read_only_user: MockUser
 ) -> None:
-    """Test that a category that is no longer chosen loses its read log."""
+    """Test that following needs a user who may see a category."""
+    hass.config_entries.async_update_entry(
+        loaded_entry,
+        options={**loaded_entry.options, CONF_ADMINS_ALWAYS: False, CONF_CATEGORIES: {"2": []}},
+    )
+    await hass.async_block_till_done()
+
+    result = await open_step(hass, loaded_entry, "follow_reads")
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_users"
+
+
+async def test_removed_category_drops_followed_reads(
+    hass: HomeAssistant, loaded_entry: MockConfigEntry, hass_read_only_user: MockUser
+) -> None:
+    """Test that a category that is no longer chosen is no longer followed."""
     hass.config_entries.async_update_entry(
         loaded_entry,
         options={
             **loaded_entry.options,
-            CONF_READ_LOG: {"2": [hass_read_only_user.id], "3": [hass_read_only_user.id]},
+            CONF_FOLLOW_READS: {hass_read_only_user.id: [2, 3], "other-user": [3]},
         },
     )
     await hass.async_block_till_done()
@@ -405,4 +455,4 @@ async def test_removed_category_drops_read_log(
     result = await hass.config_entries.options.async_configure(result["flow_id"], {})
     await hass.async_block_till_done()
 
-    assert loaded_entry.options[CONF_READ_LOG] == {"2": [hass_read_only_user.id]}
+    assert loaded_entry.options[CONF_FOLLOW_READS] == {hass_read_only_user.id: [2]}

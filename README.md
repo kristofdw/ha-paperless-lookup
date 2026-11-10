@@ -187,8 +187,9 @@ in the lists comes live from Paperless.
   - *Model field*: the text custom field with the models (`HA model`).
   - *Zigbee2MQTT link as fallback*: for a Zigbee2MQTT device without manual, link to its page on
     zigbee2mqtt.io.
-- **Read log**: choose, per category, the users whose opened and downloaded documents are written to
-  the Home Assistant logbook (see [Follow who opens what](#follow-who-opens-what)). Off by default.
+- **Follow who opens documents**: choose, per user, the categories whose opened and downloaded
+  documents are written to the Home Assistant logbook (see
+  [Follow who opens what](#follow-who-opens-what)). Off by default.
 
 Only Home Assistant administrators can open these options. The integration reloads after every change.
 
@@ -199,14 +200,15 @@ Paperless user of the integration, and Paperless' audit log only records changes
 write reads to the Home Assistant **logbook** instead, for example to follow *Invoice* for some users
 and ignore *Manual*:
 
-1. *Configure →* **Read log**.
-2. Per category, choose the users to follow. A category without users is not logged.
+1. *Configure →* **Follow who opens documents**.
+2. Per user, tick the categories to follow. Each user only gets the categories they may see; users who
+   may not see any category are named below the form instead (there is nothing they can open).
 
-Each preview or download then gives a logbook entry such as *"Alex opened Paperless document 5
-(Receipt)"*: the user, the time, the document number and the category, never the title (the logbook is
-stored in the Home Assistant database). Thumbnails are not logged, and opening the same file again
-within a minute counts once. A file that the browser still has in its cache (up to 5 minutes) does not
-reach Home Assistant again, so it is not logged again either.
+Each preview or download of a followed category then gives a logbook entry such as *"Alex opened
+Paperless document 5 (Receipt)"*: the user, the time, the document number and the category, never the
+title (the logbook is stored in the Home Assistant database). Thumbnails are not logged, and opening the
+same file again within a minute counts once. A file that the browser still has in its cache (up to 5
+minutes) does not reach Home Assistant again, so it is not logged again either.
 
 To see only these entries, open *Settings → Devices & services → Paperless Lookup →* the device
 **Paperless Lookup** (its logbook card), or filter the logbook on that device. The document number is
@@ -311,7 +313,7 @@ Removing an automatic link (✕ on the card) is remembered: the document stays u
   the browser and redacted in diagnostics. Diagnostics contain no URLs, user names or document titles.
 - **Read-only**: the integration never changes anything in Paperless. Paperless' audit log records
   changes, not reads; to follow which Home Assistant user opens what, use the
-  [read log](#follow-who-opens-what).
+  option [Follow who opens documents](#follow-who-opens-what).
 
 ## Known limitations
 

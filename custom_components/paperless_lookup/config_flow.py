@@ -4,6 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import TYPE_CHECKING, Any, override
 
+from homeassistant.auth.models import User
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
@@ -29,6 +30,7 @@ from homeassistant.helpers.selector import (
 )
 import probatio
 
+from .access import user_access
 from .api import (
     PaperlessAuthError,
     PaperlessClient,
@@ -46,10 +48,10 @@ from .const import (
     CONF_ADMINS_ALWAYS,
     CONF_CATEGORIES,
     CONF_DEVICE_CATEGORIES,
+    CONF_FOLLOW_READS,
     CONF_MODEL_FIELD,
     CONF_PANEL_USERS,
     CONF_PAPERLESS_USER_ID,
-    CONF_READ_LOG,
     CONF_ZIGBEE2MQTT_FALLBACK,
     DEFAULT_ADMINS_ALWAYS,
     DEFAULT_ZIGBEE2MQTT_FALLBACK,
@@ -88,7 +90,7 @@ class PaperlessLookupConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Paperless Lookup."""
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     def __init__(self) -> None:
         """Initialize the flow."""
@@ -286,13 +288,14 @@ class PaperlessLookupConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class PaperlessLookupOptionsFlow(OptionsFlowWithReload):
-    """Options: access tag, categories and users, devices, read log."""
+    """Options: access tag, categories and users, devices, following who opens documents."""
 
     def __init__(self) -> None:
         """Initialize the options flow."""
         self._document_types: dict[int, str] = {}
         self._selected_categories: list[int] = []
         self._user_field_keys: dict[str, int] = {}
+        self._follow_field_keys: dict[str, str] = {}
 
     @property
     def _client(self) -> PaperlessClient:
@@ -304,7 +307,7 @@ class PaperlessLookupOptionsFlow(OptionsFlowWithReload):
         if self.config_entry.state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="not_loaded")
         return self.async_show_menu(
-            step_id="init", menu_options=["access", "categories", "devices", "read_log"]
+            step_id="init", menu_options=["access", "categories", "devices", "follow_reads"]
         )
 
     async def async_step_access(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
@@ -442,49 +445,82 @@ class PaperlessLookupOptionsFlow(OptionsFlowWithReload):
             step_id="devices", data_schema=self.add_suggested_values_to_schema(schema, suggested)
         )
 
-    async def async_step_read_log(
+    async def async_step_follow_reads(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Choose, per category, the users whose previews and downloads go to the logbook."""
+        """Choose, per user, the categories whose opened documents go to the logbook."""
         if user_input is not None:
             return self._async_save(
                 {
-                    CONF_READ_LOG: {
-                        str(type_id): sorted(users)
-                        for key, type_id in self._user_field_keys.items()
-                        if (users := user_input.get(key))
+                    CONF_FOLLOW_READS: {
+                        user_id: sorted(int(value) for value in values)
+                        for key, user_id in self._follow_field_keys.items()
+                        if (values := user_input.get(key))
                     }
                 }
             )
-        categories = self._categories()
-        if not categories:
+        if not self._categories():
             return self.async_abort(reason="no_categories")
         try:
             document_types = await self._client.async_get_document_types()
         except PaperlessError:
             return self.async_abort(reason="cannot_connect")
         names = {doc_type.id: doc_type.name for doc_type in document_types}
-        type_ids = sorted(int(key) for key in categories if int(key) in names)
-        user_selector, user_ids = await self._async_user_selector()
-        self._user_field_keys = _field_keys(type_ids, names)
-        read_log = self.config_entry.options.get(CONF_READ_LOG, {})
-        schema = probatio.Schema(
-            {probatio.Optional(key): user_selector for key in self._user_field_keys}
-        )
-        suggested = {
-            key: [uid for uid in read_log.get(str(type_id), []) if uid in user_ids]
-            for key, type_id in self._user_field_keys.items()
-        }
+        entry: PaperlessLookupConfigEntry = self.config_entry
+        follow: dict[str, list[int]] = entry.options.get(CONF_FOLLOW_READS, {})
+        fields: dict[Any, SelectSelector] = {}
+        suggested: dict[str, list[str]] = {}
+        without_access: list[str] = []
+        self._follow_field_keys = {}
+        for user in await self._async_users():
+            label = user.name or user.id
+            # The same rules as the access check: only what this user may open can be followed.
+            visible = sorted(
+                (type_id for type_id in user_access(entry, user).categories if type_id in names),
+                key=lambda type_id: names[type_id].casefold(),
+            )
+            if not visible:
+                without_access.append(label)
+                continue
+            key = label if label not in self._follow_field_keys else f"{label} ({user.id[:8]})"
+            self._follow_field_keys[key] = user.id
+            fields[probatio.Optional(key)] = SelectSelector(
+                SelectSelectorConfig(
+                    options=[
+                        SelectOptionDict(value=str(type_id), label=names[type_id])
+                        for type_id in visible
+                    ],
+                    multiple=True,
+                    mode=SelectSelectorMode.LIST,
+                )
+            )
+            suggested[key] = [
+                str(type_id) for type_id in follow.get(user.id, []) if type_id in visible
+            ]
+        if not fields:
+            return self.async_abort(reason="no_users")
         return self.async_show_form(
-            step_id="read_log", data_schema=self.add_suggested_values_to_schema(schema, suggested)
+            step_id="follow_reads",
+            data_schema=self.add_suggested_values_to_schema(probatio.Schema(fields), suggested),
+            description_placeholders={"without_access": ", ".join(without_access) or "-"},
+        )
+
+    async def _async_users(self) -> list[User]:
+        """Return the active, non-system Home Assistant users, sorted by name."""
+        return sorted(
+            (
+                user
+                for user in await self.hass.auth.async_get_users()
+                if user.is_active and not user.system_generated
+            ),
+            key=lambda user: (user.name or user.id).casefold(),
         )
 
     async def _async_user_selector(self) -> tuple[SelectSelector, set[str]]:
         """Return a multi-select of the Home Assistant users, and their ids."""
         users = [
             SelectOptionDict(value=user.id, label=user.name or user.id)
-            for user in await self.hass.auth.async_get_users()
-            if user.is_active and not user.system_generated
+            for user in await self._async_users()
         ]
         selector = SelectSelector(
             SelectSelectorConfig(options=users, multiple=True, mode=SelectSelectorMode.LIST)
@@ -496,23 +532,23 @@ class PaperlessLookupOptionsFlow(OptionsFlowWithReload):
         return dict(self.config_entry.options.get(CONF_CATEGORIES, {}))
 
     def _async_save_categories(self, categories: dict[str, list[str]]) -> ConfigFlowResult:
-        """Save the categories and drop device categories and read logs of removed categories."""
+        """Save the categories; drop device categories and followed reads of removed ones."""
         options = self.config_entry.options
         device_categories = [
             type_id
             for type_id in options.get(CONF_DEVICE_CATEGORIES, [])
             if str(type_id) in categories
         ]
-        read_log = {
-            type_id: users
-            for type_id, users in options.get(CONF_READ_LOG, {}).items()
-            if type_id in categories
+        follow = {
+            user_id: kept
+            for user_id, type_ids in options.get(CONF_FOLLOW_READS, {}).items()
+            if (kept := [type_id for type_id in type_ids if str(type_id) in categories])
         }
         return self._async_save(
             {
                 CONF_CATEGORIES: categories,
                 CONF_DEVICE_CATEGORIES: device_categories,
-                CONF_READ_LOG: read_log,
+                CONF_FOLLOW_READS: follow,
             }
         )
 

@@ -1,6 +1,6 @@
 """Log document reads in the Home Assistant logbook.
 
-Opt-in per category and per Home Assistant user (option `read_log`). Only previews and downloads
+Opt-in per Home Assistant user and per category (option `follow_reads`). Only previews and downloads
 are logged, not thumbnails. The event holds ids, the category name and the user, never a document
 title or content: the logbook is stored in the recorder database.
 """
@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 
 from .api import FileKind, PaperlessDocument
-from .const import CONF_READ_LOG, DOMAIN, NAME
+from .const import CONF_FOLLOW_READS, DOMAIN, NAME
 
 if TYPE_CHECKING:
     from . import PaperlessLookupConfigEntry
@@ -51,9 +51,9 @@ def async_log_read(
     Returns whether an event was fired.
     """
     document_id, document_type = document.id, document.document_type
-    followed = entry.options.get(CONF_READ_LOG, {}).get(str(document_type), [])
+    followed = entry.options.get(CONF_FOLLOW_READS, {}).get(user.id, [])
     # A document without a type is never visible, so it is never logged either.
-    if kind not in LOGGED_KINDS or document_type is None or user.id not in followed:
+    if kind not in LOGGED_KINDS or document_type is None or document_type not in followed:
         return False
     data = entry.runtime_data
     now = monotonic()

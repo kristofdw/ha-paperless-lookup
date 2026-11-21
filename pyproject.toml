@@ -17,7 +17,7 @@ dev = [
     # Coverage; came with pytest-homeassistant-custom-component before.
     "pytest-cov==7.1.0",
     "mypy==2.4.1",
-    "ruff==0.17.4",
+    "ruff==0.17.5",
     "pre-commit==4.7.0",
 ]
 
